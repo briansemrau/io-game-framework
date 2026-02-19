@@ -147,8 +147,9 @@ int main() {
             };
             DrawCircleV(frontLightPos, 4.0f, {255, 255, 150, 255});
 
-            for (const auto& aiCar : getAICars())
+            for (size_t i = 0; i < getAICars().size(); i++)
             {
+                const auto& aiCar = getAICars()[i];
                 b2Vec2 aiCarPos = b2Body_GetTransform(aiCar.bodyId).p;
                 b2Rot aiCarRot = b2Body_GetTransform(aiCar.bodyId).q;
                 float aiCarAngle = b2Rot_GetAngle(aiCarRot);
@@ -161,11 +162,20 @@ int main() {
                 float aiCarScreenW = aiCar.width * zoom;
                 float aiCarScreenH = aiCar.height * zoom;
 
+                Color aiColors[] = {
+                    {60, 100, 200, 255},
+                    {100, 60, 200, 255},
+                    {60, 200, 100, 255},
+                    {200, 100, 60, 255},
+                    {200, 60, 180, 255}
+                };
+                Color aiColor = aiColors[i % 5];
+
                 DrawRectanglePro(
                     {aiCarScreenPos.x, aiCarScreenPos.y, aiCarScreenW, aiCarScreenH},
                     {aiCarScreenW / 2.0f, aiCarScreenH / 2.0f},
                     aiCarAngle * (180.0f / 3.14159f),
-                    {60, 100, 200, 255}
+                    aiColor
                 );
             }
 

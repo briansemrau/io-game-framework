@@ -62,7 +62,12 @@ Note: Collision damage requires box2d v3 contact events API. Deferred for now.
 - [x] Add zoom control with mouse wheel
 - [x] Add speed indicator
 - [x] Add more AI cars for action
-- [ ] Add car trail/particle effects
+- [x] Add car trail/particle effects
+
+## Phase 6: Additional Improvements
+- [ ] Add different colors for AI cars
+- [ ] Add collision sounds
+- [ ] Add background music
 
 ## Design Notes
 - Top-down car uses raycast or custom movement (not standard platformer gravity)
