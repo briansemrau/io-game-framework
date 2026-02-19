@@ -25,8 +25,7 @@ endif()
 function(add_client_executable TARGET)
     add_executable(${TARGET} ${ARGN})
     set_target_properties(${TARGET} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/client
-        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/client
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/client/$<CONFIG>
     )
     target_link_libraries(${TARGET} PRIVATE raylib box2d)
     target_compile_options(${TARGET} PRIVATE ${COMPILE_OPTIONS})
@@ -42,8 +41,7 @@ endfunction()
 function(add_server_executable TARGET)
     add_executable(${TARGET} ${ARGN})
     set_target_properties(${TARGET} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/server
-        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/server
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/server/$<CONFIG>
     )
     target_link_libraries(${TARGET} PRIVATE box2d)
     target_compile_options(${TARGET} PRIVATE ${COMPILE_OPTIONS})
