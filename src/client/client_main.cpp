@@ -72,12 +72,12 @@ int main() {
                 screenCenter.y + carPos.y * zoom
             };
             playerTrail.push_back({screenPos, 1.0f});
-            if (playerTrail.size() > 30) playerTrail.erase(playerTrail.begin());
+            if (playerTrail.size() > 60) playerTrail.erase(playerTrail.begin());
         }
         
         for (auto& point : playerTrail)
         {
-            point.alpha -= 0.03f;
+            point.alpha -= 0.015f;
         }
         playerTrail.erase(
             std::remove_if(playerTrail.begin(), playerTrail.end(), [](const TrailPoint& p) { return p.alpha <= 0; }),
