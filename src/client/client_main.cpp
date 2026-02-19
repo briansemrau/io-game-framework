@@ -146,11 +146,13 @@ int main() {
             float carScreenW = playerCar.width * zoom;
             float carScreenH = playerCar.height * zoom;
             
+            Color playerCarColor = handbrakeInput ? Color{255, 150, 50, 255} : Color{200, 60, 60, 255};
+            
             DrawRectanglePro(
                 {carScreenPos.x, carScreenPos.y, carScreenW, carScreenH},
                 {carScreenW / 2.0f, carScreenH / 2.0f},
                 carAngle * (180.0f / 3.14159f),
-                {200, 60, 60, 255}
+                playerCarColor
             );
 
             Vector2 frontDir = {
