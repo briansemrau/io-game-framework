@@ -14,6 +14,7 @@ struct Obstacle
 
 void initCommon();
 void stepCommon();
+void resetGame();
 b2WorldId getWorldId();
 Car& getPlayerCar();
 const std::vector<Obstacle>& getObstacles();

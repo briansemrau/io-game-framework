@@ -100,6 +100,29 @@ void stepCommon() {
     b2World_Step(worldId, deltaTime, 4);
 }
 
+void resetGame()
+{
+    for (auto& aiCar : aiCars)
+    {
+        if (b2Body_IsValid(aiCar.bodyId))
+        {
+            b2DestroyBody(aiCar.bodyId);
+        }
+    }
+    aiCars.clear();
+
+    if (b2Body_IsValid(playerCar.bodyId))
+    {
+        b2DestroyBody(playerCar.bodyId);
+    }
+
+    createCar(worldId, playerCar, {0.0f, 0.0f});
+
+    addAICar({-5.0f, -5.0f});
+    addAICar({5.0f, 5.0f});
+    addAICar({-5.0f, 5.0f});
+}
+
 b2WorldId getWorldId() {
     return worldId;
 }

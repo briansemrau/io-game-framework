@@ -34,6 +34,8 @@ int main() {
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) turnInput += 1.0f;
         if (IsKeyDown(KEY_SPACE)) handbrakeInput = true;
         
+        if (IsKeyPressed(KEY_R)) resetGame();
+        
         carSetInput(playerCar, throttleInput, turnInput, handbrakeInput);
         
         stepCommon();

@@ -42,6 +42,11 @@
 - No collision between player and AI cars yet
 - Simple rectangle rendering, no sprites
 
+## Phase 3: Game Improvements
+- [x] Add reset key (R) to restart game
+- [x] Improve AI behavior
+- [x] Add car-to-car collision (already works via box2d)
+
 ## Design Notes
 - Top-down car uses raycast or custom movement (not standard platformer gravity)
 - Car has: position, rotation, velocity, angular velocity, acceleration
