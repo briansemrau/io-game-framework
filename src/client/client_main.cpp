@@ -140,12 +140,16 @@ int main() {
             DrawText(std::format("x: {:.1f} y: {:.1f}", carPos.x, carPos.y).c_str(), GetScreenWidth() - 200, 50, 20, GRAY);
             DrawText(std::format("Zoom: {:.0f}", zoom).c_str(), GetScreenWidth() - 200, 70, 20, GRAY);
             
+            b2Vec2 velocity = b2Body_GetLinearVelocity(playerCar.bodyId);
+            float speed = b2Length(velocity);
+            DrawText(std::format("Speed: {:.1f}", speed).c_str(), 10, 10, 20, LIGHTGRAY);
+            
             int aiAlive = 0;
             for (const auto& aiCar : getAICars())
             {
                 if (aiCar.health > 0) aiAlive++;
             }
-            DrawText(std::format("Enemies: {}", aiAlive).c_str(), GetScreenWidth() - 200, 70, 20, GRAY);
+            DrawText(std::format("Enemies: {}", aiAlive).c_str(), GetScreenWidth() - 200, 90, 20, GRAY);
         }
         EndDrawing();
     }

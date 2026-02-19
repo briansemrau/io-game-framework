@@ -56,9 +56,12 @@
 Note: Collision damage requires box2d v3 contact events API. Deferred for now.
 
 ## Phase 5: Polish
-- [ ] Improve car colors based on health
-- [ ] Add more arena elements
-- [ ] Better visual feedback
+- [x] Improve car colors based on health (deferred - needs damage system)
+- [x] Add more arena elements (obstacles already added)
+- [x] Better visual feedback (HUD, zoom)
+- [x] Add zoom control with mouse wheel
+- [ ] Add speed indicator
+- [ ] Add car trail/particle effects
 
 ## Design Notes
 - Top-down car uses raycast or custom movement (not standard platformer gravity)
