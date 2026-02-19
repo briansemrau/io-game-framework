@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.25)
 project(destruction_derby CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -24,6 +24,10 @@ endif()
 
 function(add_client_executable TARGET)
     add_executable(${TARGET} ${ARGN})
+    set_target_properties(${TARGET} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/client
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/client
+    )
     target_link_libraries(${TARGET} PRIVATE raylib box2d)
     target_compile_options(${TARGET} PRIVATE ${COMPILE_OPTIONS})
     if (APPLE)
@@ -37,6 +41,10 @@ endfunction()
 
 function(add_server_executable TARGET)
     add_executable(${TARGET} ${ARGN})
+    set_target_properties(${TARGET} PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/server
+        RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/server
+    )
     target_link_libraries(${TARGET} PRIVATE box2d)
     target_compile_options(${TARGET} PRIVATE ${COMPILE_OPTIONS})
 endfunction()

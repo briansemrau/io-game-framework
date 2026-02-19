@@ -2,36 +2,48 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Client",
+            "name": "Launch Client (Debug)",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "./build/client.exe",
+            "program": "${workspaceFolder}/build/client/Debug/client.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": ".",
-            "preLaunchTask": "CMake: Build Client",
-            "environment": [
-                {
-                    "name": "PATH",
-                    "value": "${env:PATH}:./build"
-                }
-            ],
+            "preLaunchTask": "CMake: Build Client (Debug)",
+            "environment": []
         },
         {
-            "name": "Launch Server",
+            "name": "Launch Client (Release)",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "./build/server.exe",
+            "program": "${workspaceFolder}/build/client/Release/client.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": ".",
-            "preLaunchTask": "CMake: Build Server",
-            "environment": [
-                {
-                    "name": "PATH",
-                    "value": "${env:PATH}:./build"
-                }
-            ],
+            "preLaunchTask": "CMake: Build Client (Release)",
+            "environment": []
+        },
+        {
+            "name": "Launch Server (Debug)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/server/Debug/server.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": ".",
+            "preLaunchTask": "CMake: Build Server (Debug)",
+            "environment": []
+        },
+        {
+            "name": "Launch Server (Release)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/server/Release/server.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": ".",
+            "preLaunchTask": "CMake: Build Server (Release)",
+            "environment": []
         }
     ]
 }

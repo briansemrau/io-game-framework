@@ -15,7 +15,7 @@
             "group": "none"
         },
         {
-            "label": "CMake: Build Client",
+            "label": "CMake: Build Client (Debug)",
             "type": "shell",
             "command": "cmake",
             "args": [
@@ -29,7 +29,23 @@
             "dependsOn": ["CMake: Configure"]
         },
         {
-            "label": "CMake: Build Server",
+            "label": "CMake: Build Client (Release)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "./build",
+                "--target",
+                "client",
+                "--config",
+                "Release"
+            ],
+            "problemMatcher": ["$gcc"],
+            "group": "build",
+            "dependsOn": ["CMake: Configure"]
+        },
+        {
+            "label": "CMake: Build Server (Debug)",
             "type": "shell",
             "command": "cmake",
             "args": [
@@ -43,12 +59,41 @@
             "dependsOn": ["CMake: Configure"]
         },
         {
-            "label": "CMake: Build All",
+            "label": "CMake: Build Server (Release)",
             "type": "shell",
             "command": "cmake",
             "args": [
                 "--build",
-                "./build"
+                "./build",
+                "--target",
+                "server",
+                "--config",
+                "Release"
+            ],
+            "problemMatcher": ["$gcc"],
+            "group": "build",
+            "dependsOn": ["CMake: Configure"]
+        },
+        {
+            "label": "CMake: Build All (Debug)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build"
+            ],
+            "problemMatcher": ["$gcc"],
+            "group": "build",
+            "dependsOn": ["CMake: Configure"]
+        },
+        {
+            "label": "CMake: Build All (Release)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "./build",
+                "--config",
+                "Release"
             ],
             "problemMatcher": ["$gcc"],
             "group": "build",
