@@ -60,7 +60,8 @@ Note: Collision damage requires box2d v3 contact events API. Deferred for now.
 - [x] Add more arena elements (obstacles already added)
 - [x] Better visual feedback (HUD, zoom)
 - [x] Add zoom control with mouse wheel
-- [ ] Add speed indicator
+- [x] Add speed indicator
+- [x] Add more AI cars for action
 - [ ] Add car trail/particle effects
 
 ## Design Notes

@@ -1,4 +1,6 @@
 #include "raylib.h"
+#include <vector>
+
 #include "box2d/box2d.h"
 #include <iostream>
 #include <format>
@@ -9,6 +11,12 @@
 #include "physics_settings.h"
 
 #include "common_main.h"
+
+struct TrailPoint
+{
+    Vector2 position;
+    float alpha;
+};
 
 int main() {
     constexpr int screenWidth = 1280;
@@ -21,6 +29,7 @@ int main() {
     initCommon();
     Car& playerCar = getPlayerCar();
     float zoom = 30.0f;
+    std::vector<TrailPoint> playerTrail;
 
     while (!WindowShouldClose()) {
         SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
@@ -49,11 +58,34 @@ int main() {
         
         stepCommon();
         
+        b2Vec2 carPos = b2Body_GetTransform(playerCar.bodyId).p;
+        b2Vec2 velocity = b2Body_GetLinearVelocity(playerCar.bodyId);
+        float speed = b2Length(velocity);
+        
+        if (speed > 5.0f || handbrakeInput)
+        {
+            Vector2 screenCenter = { (float)GetScreenWidth() / 2.0f, (float)GetScreenHeight() / 2.0f };
+            Vector2 screenPos = {
+                screenCenter.x + carPos.x * zoom,
+                screenCenter.y + carPos.y * zoom
+            };
+            playerTrail.push_back({screenPos, 1.0f});
+            if (playerTrail.size() > 30) playerTrail.erase(playerTrail.begin());
+        }
+        
+        for (auto& point : playerTrail)
+        {
+            point.alpha -= 0.03f;
+        }
+        playerTrail.erase(
+            std::remove_if(playerTrail.begin(), playerTrail.end(), [](const TrailPoint& p) { return p.alpha <= 0; }),
+            playerTrail.end()
+        );
+        
         BeginDrawing();
         {
             ClearBackground({40, 45, 50, 255});
             
-            b2Vec2 carPos = b2Body_GetTransform(playerCar.bodyId).p;
             b2Rot carRot = b2Body_GetTransform(playerCar.bodyId).q;
             float carAngle = b2Rot_GetAngle(carRot);
             
@@ -73,6 +105,11 @@ int main() {
                 arenaH
             };
             DrawRectangleLinesEx(arenaRect, 4.0f, {80, 90, 100, 255});
+
+            for (const auto& point : playerTrail)
+            {
+                DrawCircleV(point.position, 3.0f, {200, 60, 60, (unsigned char)(point.alpha * 255)});
+            }
 
             for (const auto& obstacle : getObstacles())
             {
@@ -139,9 +176,6 @@ int main() {
             DrawText(std::format(" {:.2f}", GetFrameTime()).c_str(), GetScreenWidth() - 100, 30, 20, GRAY);
             DrawText(std::format("x: {:.1f} y: {:.1f}", carPos.x, carPos.y).c_str(), GetScreenWidth() - 200, 50, 20, GRAY);
             DrawText(std::format("Zoom: {:.0f}", zoom).c_str(), GetScreenWidth() - 200, 70, 20, GRAY);
-            
-            b2Vec2 velocity = b2Body_GetLinearVelocity(playerCar.bodyId);
-            float speed = b2Length(velocity);
             DrawText(std::format("Speed: {:.1f}", speed).c_str(), 10, 10, 20, LIGHTGRAY);
             
             int aiAlive = 0;
