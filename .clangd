@@ -1,0 +1,14 @@
+CompileFlags:
+  Add:
+    - -I
+    - thirdparty/box2d/include
+    - -I
+    - thirdparty/raylib/src
+    - -I
+    - src
+    - -std=c++23
+
+InlayHints:
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes
