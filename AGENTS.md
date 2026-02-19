@@ -131,3 +131,4 @@ There are no automated tests in the main build.
 
 ## Git Workflow
 Do not create git commits. You may view status, but the user is in control of the git history.
+The only exception to this rule is on "*-freeform" branches. You may never switch branches, but you may commit and revert in a *-freeform branch. The user will typically prompt you to use git in these situations.
