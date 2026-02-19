@@ -12,12 +12,25 @@ This is not a throwaway prototype. The architecture is designed to be **extensib
 
 **Design philosophy**: Simple, clean code first. Abstraction only when needed for extensibility. Build a solid foundation that can grow.
 
-**Architectural principles:**
+## Architectural Principles
+
 - **Common is the heart** - If something belongs in both client and server, it goes in common. The client is an extension, not a shortcut.
 - **Client handles presentation** - Renderer wraps game state, input generates events that manipulate state, client maintains local state for rollback and resimulation. Client does not own or directly control game state.
 - **Prefer future-proof over simple** - A slightly more complex approach that enables extensibility beats the simplest solution that paints you into a corner.
 - **Intentional architecture** - Explicit is better than implicit. Boundaries between systems should be clear, not accidental.
 - **No shortcuts** - Code written today is code you'll maintain forever.
+
+### Server-Authoritative Design
+- All game logic lives in `common/` (shared between client/server)
+- Server owns physics truth; client predicts and interpolates
+- Game state is reproducible for rollback
+- Network protocol is an abstraction - prepare for WebRTC or similar
+
+### Extensibility
+- Design for addition, not modification
+- New entity types should not require changes to core architecture
+- Consider serialization concerns early (snapshot/restore for rollback)
+- Use interfaces/abstractions where multiple implementations may be needed
 
 ## Build Commands
 
@@ -37,9 +50,20 @@ The following tasks are configured in `.vscode/tasks.json`:
 ./build/server
 ```
 
+## Project Structure
+```
+src/
+  client/     - Client executable code (graphics, input)
+  common/     - Shared code (game state, systems, physics)
+  server/     - Server executable code (no graphics or input)
+thirdparty/
+  raylib/     - Graphics library (git submodule)
+  box2d/      - Physics library (git submodule)
+```
+
 ## Code Style Guidelines
 
-### General Principles
+### General
 - C++23 standard is required
 - Prefer modern C++ features (concepts, constexpr, std::format, etc.)
 - This project aims to have a very clean codebase. Architecture and build configuration should be very maintainable and professional.
@@ -98,37 +122,12 @@ Use include guards (not `#pragma once`):
 - Specify return type if ambiguous or to aid readability
 - Use for callbacks and STL algorithm customization
 
-### Dependencies
+## Dependencies
 - **raylib**: Client-side graphics and window management
 - **box2d**: Physics simulation (C API version, `b2WorldId`, `b2BodyId`, etc.)
 
-### Project Structure
-```
-src/
-  client/     - Client executable code (graphics, input)
-  common/     - Shared code (game state, systems, physics)
-  server/     - Server executable code (no graphics or input)
-thirdparty/
-  raylib/     - Graphics library (git submodule)
-  box2d/      - Physics library (git submodule)
-```
+## Testing
+There are no automated tests in the main build.
 
-### Architecture Guidelines
-
-#### Server-Authoritative Design
-- All game logic lives in `common/` (shared between client/server)
-- Server owns physics truth; client predicts and interpolates
-- Game state is reproducible for rollback
-- Network protocol is an abstraction - prepare for WebRTC or similar
-
-#### Extensibility
-- Design for addition, not modification
-- New entity types should not require changes to core architecture
-- Consider serialization concerns early (snapshot/restore for rollback)
-- Use interfaces/abstractions where multiple implementations may be needed
-
-### Testing
-- There are no automated tests in the main build
-
-### Git Workflow
+## Git Workflow
 Do not create git commits. You may view status, but the user is in control of the git history.
