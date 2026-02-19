@@ -11,62 +11,85 @@
 #include "common_main.h"
 
 int main() {
-    constexpr int screenWidth = 800;
-    constexpr int screenHeight = 600;
+    constexpr int screenWidth = 1280;
+    constexpr int screenHeight = 720;
 
     InitWindow(screenWidth, screenHeight, "Destruction Derby");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
 
     initCommon();
+    Car& playerCar = getPlayerCar();
 
     while (!WindowShouldClose()) {
         SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
 
-        // Character movement input
         float throttleInput = 0.0f;
-        float climbingInput = 0.0f;
-        bool jumpInput = false;
-        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) throttleInput -= 1.0f;
-        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) throttleInput += 1.0f;
-        if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_SPACE)) climbingInput += 1.0f;
+        float turnInput = 0.0f;
+        bool handbrakeInput = false;
+
+        if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) throttleInput += 1.0f;
         if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) throttleInput -= 1.0f;
-        if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_SPACE)) jumpInput = true;
-        // character.CommandInput(throttleInput, jumpInput, climbingInput);
+        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) turnInput -= 1.0f;
+        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) turnInput += 1.0f;
+        if (IsKeyDown(KEY_SPACE)) handbrakeInput = true;
+        
+        carSetInput(playerCar, throttleInput, turnInput, handbrakeInput);
         
         stepCommon();
         
         BeginDrawing();
         {
-            ClearBackground(RAYWHITE);
+            ClearBackground({40, 45, 50, 255});
             
-            // Render tile map
-            // tileMap.Render();
+            b2Vec2 carPos = b2Body_GetTransform(playerCar.bodyId).p;
+            b2Rot carRot = b2Body_GetTransform(playerCar.bodyId).q;
+            float carAngle = b2Rot_GetAngle(carRot);
             
-            // Render character
-            // character.Render();
-            // debugDraw.DrawSolidCapsuleFcn(
-            //     b2TransformPoint(character.transform, character.capsule.center1),
-            //     b2TransformPoint(character.transform, character.capsule.center2),
-            //     character.capsule.radius,
-            //     b2_colorAqua,
-            //     nullptr
-            // );
+            float zoom = 30.0f;
+            Vector2 screenCenter = { (float)GetScreenWidth() / 2.0f, (float)GetScreenHeight() / 2.0f };
+            Vector2 carScreenPos = {
+                screenCenter.x + carPos.x * zoom,
+                screenCenter.y + carPos.y * zoom
+            };
 
-            // b2World_Draw(worldId, &debugDraw);
-
-            // DrawText(std::format("x={:.2f}, y={:.2f}, G={:d}", character.transform.p.x, character.transform.p.y, character.onGround).c_str(), 10, 10, 20, BLACK);
+            float arenaW = 40.0f * zoom;
+            float arenaH = 30.0f * zoom;
             
-            // static const std::vector<std::string> toolStrings = {
-            //     "Dig",
-            //     "Place",
-            //     "Ladder"
-            // };
-            // const std::string toolStr = toolStrings[(int)currentTool];
-            // DrawText(std::format("Tool: {} (1=Dig, 2=Place, 3=Ladder)", toolStr).c_str(), 10, 35, 20, DARKGRAY);
+            Rectangle arenaRect = {
+                screenCenter.x - arenaW / 2.0f,
+                screenCenter.y - arenaH / 2.0f,
+                arenaW,
+                arenaH
+            };
+            DrawRectangleLinesEx(arenaRect, 4.0f, {80, 90, 100, 255});
 
+            float carScreenW = playerCar.width * zoom;
+            float carScreenH = playerCar.height * zoom;
+            
+            DrawRectanglePro(
+                {carScreenPos.x, carScreenPos.y, carScreenW, carScreenH},
+                {carScreenW / 2.0f, carScreenH / 2.0f},
+                carAngle * (180.0f / 3.14159f),
+                {200, 60, 60, 255}
+            );
+
+            Vector2 frontDir = {
+                sinf(carAngle),
+                cosf(carAngle)
+            };
+            Vector2 frontLightPos = {
+                carScreenPos.x + frontDir.x * carScreenH / 2.0f,
+                carScreenPos.y + frontDir.y * carScreenH / 2.0f
+            };
+            DrawCircleV(frontLightPos, 4.0f, {255, 255, 150, 255});
+
+            const char* controls = "WASD/Arrows: Drive | Space: Handbrake";
+            DrawText(controls, 10, GetScreenHeight() - 30, 20, LIGHTGRAY);
+            
             DrawFPS(GetScreenWidth() - 100, 10);
-            DrawText(std::format("{:.4f}", GetFrameTime()).c_str(), GetScreenWidth() - 100, 30, 20, GRAY);
+            DrawText(std::format(" {:.2f}", GetFrameTime()).c_str(), GetScreenWidth() - 100, 30, 20, GRAY);
+            DrawText(std::format("x: {:.1f} y: {:.1f}", carPos.x, carPos.y).c_str(), GetScreenWidth() - 200, 50, 20, GRAY);
         }
         EndDrawing();
     }
