@@ -87,6 +87,8 @@ void initCommon() {
     addAICar({-5.0f, -5.0f});
     addAICar({5.0f, 5.0f});
     addAICar({-5.0f, 5.0f});
+    addAICar({8.0f, -3.0f});
+    addAICar({-8.0f, 3.0f});
     
     b2World_SetPreSolveCallback(worldId, [](b2ShapeId shapeIdA, b2ShapeId shapeIdB, b2Vec2 point, b2Vec2 normal, void*) -> bool {
         return true;
@@ -121,6 +123,8 @@ void resetGame()
     addAICar({-5.0f, -5.0f});
     addAICar({5.0f, 5.0f});
     addAICar({-5.0f, 5.0f});
+    addAICar({8.0f, -3.0f});
+    addAICar({-8.0f, 3.0f});
 }
 
 b2WorldId getWorldId() {
