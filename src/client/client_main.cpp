@@ -20,9 +20,18 @@ int main() {
 
     initCommon();
     Car& playerCar = getPlayerCar();
+    float zoom = 30.0f;
 
     while (!WindowShouldClose()) {
         SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
+
+        float mouseWheel = GetMouseWheelMove();
+        if (mouseWheel != 0)
+        {
+            zoom += mouseWheel * 5.0f;
+            if (zoom < 10.0f) zoom = 10.0f;
+            if (zoom > 60.0f) zoom = 60.0f;
+        }
 
         float throttleInput = 0.0f;
         float turnInput = 0.0f;
@@ -48,7 +57,6 @@ int main() {
             b2Rot carRot = b2Body_GetTransform(playerCar.bodyId).q;
             float carAngle = b2Rot_GetAngle(carRot);
             
-            float zoom = 30.0f;
             Vector2 screenCenter = { (float)GetScreenWidth() / 2.0f, (float)GetScreenHeight() / 2.0f };
             Vector2 carScreenPos = {
                 screenCenter.x + carPos.x * zoom,
@@ -124,12 +132,20 @@ int main() {
                 );
             }
 
-            const char* controls = "WASD/Arrows: Drive | Space: Handbrake";
+            const char* controls = "WASD/Arrows: Drive | Space: Handbrake | R: Reset | Scroll: Zoom";
             DrawText(controls, 10, GetScreenHeight() - 30, 20, LIGHTGRAY);
             
             DrawFPS(GetScreenWidth() - 100, 10);
             DrawText(std::format(" {:.2f}", GetFrameTime()).c_str(), GetScreenWidth() - 100, 30, 20, GRAY);
             DrawText(std::format("x: {:.1f} y: {:.1f}", carPos.x, carPos.y).c_str(), GetScreenWidth() - 200, 50, 20, GRAY);
+            DrawText(std::format("Zoom: {:.0f}", zoom).c_str(), GetScreenWidth() - 200, 70, 20, GRAY);
+            
+            int aiAlive = 0;
+            for (const auto& aiCar : getAICars())
+            {
+                if (aiCar.health > 0) aiAlive++;
+            }
+            DrawText(std::format("Enemies: {}", aiAlive).c_str(), GetScreenWidth() - 200, 70, 20, GRAY);
         }
         EndDrawing();
     }
