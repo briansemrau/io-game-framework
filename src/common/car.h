@@ -14,6 +14,8 @@ struct Car
     float turnSpeed;
     float friction;
     float driftFactor;
+    float health;
+    float maxHealth;
 
     float throttleInput;
     float turnInput;

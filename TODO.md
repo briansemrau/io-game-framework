@@ -47,6 +47,14 @@
 - [x] Improve AI behavior
 - [x] Add car-to-car collision (already works via box2d)
 
+## Phase 4: Damage System
+- [ ] Add collision damage based on impact velocity (deferred - box2d v3 API issues)
+- [ ] Show car health/color changes on damage
+- [ ] Destroy cars when health reaches zero
+- [ ] Add victory condition
+
+Note: Collision damage requires box2d v3 contact events API. Deferred for now.
+
 ## Design Notes
 - Top-down car uses raycast or custom movement (not standard platformer gravity)
 - Car has: position, rotation, velocity, angular velocity, acceleration

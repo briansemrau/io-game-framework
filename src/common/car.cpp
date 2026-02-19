@@ -11,6 +11,8 @@ void createCar(b2WorldId worldId, Car& car, b2Vec2 position)
     car.turnSpeed = 3.5f;
     car.friction = 0.98f;
     car.driftFactor = 0.95f;
+    car.maxHealth = 100.0f;
+    car.health = car.maxHealth;
 
     car.throttleInput = 0.0f;
     car.turnInput = 0.0f;
@@ -33,7 +35,7 @@ void createCar(b2WorldId worldId, Car& car, b2Vec2 position)
     material.restitution = 0.1f;
     shapeDef.material = material;
     shapeDef.filter.categoryBits = static_cast<uint64_t>(CarCollisionBits::CarBit);
-    shapeDef.filter.maskBits = static_cast<uint64_t>(CarCollisionBits::StaticBit);
+    shapeDef.filter.maskBits = static_cast<uint64_t>(CarCollisionBits::StaticBit) | static_cast<uint64_t>(CarCollisionBits::CarBit);
 
     b2CreatePolygonShape(car.bodyId, &shapeDef, &polygon);
 }
