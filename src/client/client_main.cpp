@@ -64,6 +64,22 @@ int main() {
             };
             DrawRectangleLinesEx(arenaRect, 4.0f, {80, 90, 100, 255});
 
+            for (const auto& obstacle : getObstacles())
+            {
+                Vector2 obstacleScreenPos = {
+                    screenCenter.x + obstacle.position.x * zoom,
+                    screenCenter.y + obstacle.position.y * zoom
+                };
+                float obstacleScreenW = obstacle.halfSize.x * 2.0f * zoom;
+                float obstacleScreenH = obstacle.halfSize.y * 2.0f * zoom;
+                DrawRectanglePro(
+                    {obstacleScreenPos.x, obstacleScreenPos.y, obstacleScreenW, obstacleScreenH},
+                    {obstacleScreenW / 2.0f, obstacleScreenH / 2.0f},
+                    obstacle.angle * (180.0f / 3.14159f),
+                    {100, 100, 110, 255}
+                );
+            }
+
             float carScreenW = playerCar.width * zoom;
             float carScreenH = playerCar.height * zoom;
             
@@ -83,6 +99,28 @@ int main() {
                 carScreenPos.y + frontDir.y * carScreenH / 2.0f
             };
             DrawCircleV(frontLightPos, 4.0f, {255, 255, 150, 255});
+
+            for (const auto& aiCar : getAICars())
+            {
+                b2Vec2 aiCarPos = b2Body_GetTransform(aiCar.bodyId).p;
+                b2Rot aiCarRot = b2Body_GetTransform(aiCar.bodyId).q;
+                float aiCarAngle = b2Rot_GetAngle(aiCarRot);
+
+                Vector2 aiCarScreenPos = {
+                    screenCenter.x + aiCarPos.x * zoom,
+                    screenCenter.y + aiCarPos.y * zoom
+                };
+
+                float aiCarScreenW = aiCar.width * zoom;
+                float aiCarScreenH = aiCar.height * zoom;
+
+                DrawRectanglePro(
+                    {aiCarScreenPos.x, aiCarScreenPos.y, aiCarScreenW, aiCarScreenH},
+                    {aiCarScreenW / 2.0f, aiCarScreenH / 2.0f},
+                    aiCarAngle * (180.0f / 3.14159f),
+                    {60, 100, 200, 255}
+                );
+            }
 
             const char* controls = "WASD/Arrows: Drive | Space: Handbrake";
             DrawText(controls, 10, GetScreenHeight() - 30, 20, LIGHTGRAY);

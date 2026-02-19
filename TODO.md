@@ -25,10 +25,22 @@
 - Simple rectangle rendering, no sprites
 
 ## Next Phase
-- [ ] Tune car physics parameters for better feel
-- [ ] Add basic obstacle inside arena
-- [ ] Add multiple cars for demo/testing
+- [x] Tune car physics parameters for better feel
+- [x] Add basic obstacle inside arena
+- [x] Add multiple cars for demo/testing
 - [ ] Consider adding simple car sprite/graphics
+
+## Review - Phase 2
+### What's Working
+- Added 6 obstacles to the arena for collision testing
+- Added 3 AI cars that drive around autonomously
+- Player car (red) vs AI cars (blue)
+- Full physics simulation working
+
+### Concerns
+- AI cars drive in circles/patterns, not intelligent
+- No collision between player and AI cars yet
+- Simple rectangle rendering, no sprites
 
 ## Design Notes
 - Top-down car uses raycast or custom movement (not standard platformer gravity)
