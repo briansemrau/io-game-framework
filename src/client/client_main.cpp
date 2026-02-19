@@ -212,6 +212,25 @@ int main() {
                 if (aiCar.health > 0) aiAlive++;
             }
             DrawText(std::format("Enemies: {}", aiAlive).c_str(), GetScreenWidth() - 200, 90, 20, GRAY);
+            
+            float miniMapSize = 100.0f;
+            float miniMapScale = 2.0f;
+            Vector2 miniMapPos = {GetScreenWidth() - miniMapSize - 20, GetScreenHeight() - miniMapSize - 20};
+            DrawRectangle((int)miniMapPos.x, (int)miniMapPos.y, (int)miniMapSize, (int)miniMapSize, {20, 25, 30, 150});
+            DrawRectangleLines((int)miniMapPos.x, (int)miniMapPos.y, (int)miniMapSize, (int)miniMapSize, {80, 90, 100, 255});
+            
+            b2Vec2 playerPos = b2Body_GetTransform(playerCar.bodyId).p;
+            DrawCircleV({miniMapPos.x + miniMapSize/2 + playerPos.x * miniMapScale, miniMapPos.y + miniMapSize/2 + playerPos.y * miniMapScale}, 4.0f, {255, 50, 50, 255});
+            
+            for (const auto& aiCar : getAICars())
+            {
+                b2Vec2 aiPos = b2Body_GetTransform(aiCar.bodyId).p;
+                Vector2 aiMiniPos = {
+                    miniMapPos.x + miniMapSize/2 + aiPos.x * miniMapScale,
+                    miniMapPos.y + miniMapSize/2 + aiPos.y * miniMapScale
+                };
+                DrawCircleV(aiMiniPos, 3.0f, {50, 50, 255, 255});
+            }
         }
         EndDrawing();
     }
