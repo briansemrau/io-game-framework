@@ -2,17 +2,34 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch",
+            "name": "Launch Client",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${command:cmake.launchTargetPath}",
+            "program": "./build/client.exe",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": ".",
+            "preLaunchTask": "CMake: Build Client",
             "environment": [
                 {
                     "name": "PATH",
-                    "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
+                    "value": "${env:PATH}:./build"
+                }
+            ],
+        },
+        {
+            "name": "Launch Server",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "./build/server.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": ".",
+            "preLaunchTask": "CMake: Build Server",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${env:PATH}:./build"
                 }
             ],
         }
