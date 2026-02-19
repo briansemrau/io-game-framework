@@ -154,13 +154,26 @@ void updateAICars()
     static float time = 0.0f;
     time += 1.0f / 60.0f;
     
+    b2Vec2 playerPos = b2Body_GetTransform(playerCar.bodyId).p;
+    
     int index = 0;
     for (auto& aiCar : aiCars)
     {
         b2Vec2 carPos = b2Body_GetTransform(aiCar.bodyId).p;
         
-        float targetX = carPos.x + sinf(time * 0.5f + (float)index) * 5.0f;
-        float targetY = carPos.y + cosf(time * 0.3f + (float)index) * 5.0f;
+        float followPlayer = (index % 2 == 0) ? 0.7f : 0.0f;
+        float targetX, targetY;
+        
+        if (followPlayer > 0.0f)
+        {
+            targetX = playerPos.x + sinf(time * 0.5f + (float)index * 1.5f) * 3.0f;
+            targetY = playerPos.y + cosf(time * 0.3f + (float)index * 1.5f) * 3.0f;
+        }
+        else
+        {
+            targetX = carPos.x + sinf(time * 0.5f + (float)index) * 8.0f;
+            targetY = carPos.y + cosf(time * 0.3f + (float)index) * 8.0f;
+        }
         
         b2Vec2 toTarget = {targetX - carPos.x, targetY - carPos.y};
         float targetAngle = atan2f(toTarget.x, toTarget.y);
@@ -176,7 +189,8 @@ void updateAICars()
         if (turnInput > 1.0f) turnInput = 1.0f;
         if (turnInput < -1.0f) turnInput = -1.0f;
         
-        carSetInput(aiCar, 0.8f, turnInput, false);
+        float throttleInput = 0.6f + followPlayer * 0.3f;
+        carSetInput(aiCar, throttleInput, turnInput, false);
         index++;
     }
 }
