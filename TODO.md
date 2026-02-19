@@ -72,12 +72,17 @@ Note: Collision damage requires box2d v3 contact events API. Deferred for now.
 ## Completed Features Summary
 - Top-down car physics with drift mechanics
 - Player controls (WASD/Arrows + handbrake)
-- 5 AI opponents with different colors
+- 5 AI opponents with different colors (chase player)
 - 6 obstacles in arena
-- Drift trail particle effect
-- Zoom control, speed indicator, HUD
-- Reset key, window title
-- Both client and server compile
+- Arena with background grid
+- Drift trail particle effect (long lasting)
+- Zoom control (mouse wheel)
+- Speed indicator
+- Extended HUD with enemy count
+- Reset key (R)
+- Window title with instructions
+- Player car color changes when handbrake is used
+- Both client and server compile successfully
 
 ## Design Notes
 - Top-down car uses raycast or custom movement (not standard platformer gravity)
