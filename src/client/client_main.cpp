@@ -31,6 +31,8 @@ int main() {
     float zoom = 30.0f;
     std::vector<TrailPoint> playerTrail;
 
+    SetWindowTitle("Destruction Derby - Drive with WASD, Handbrake: Space, Reset: R");
+
     while (!WindowShouldClose()) {
         SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
 
