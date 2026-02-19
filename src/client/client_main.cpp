@@ -108,6 +108,20 @@ int main() {
             };
             DrawRectangleLinesEx(arenaRect, 4.0f, {80, 90, 100, 255});
 
+            float gridSize = 5.0f;
+            for (float x = -20.0f; x <= 20.0f; x += gridSize)
+            {
+                Vector2 start = {screenCenter.x + x * zoom, screenCenter.y - 15.0f * zoom};
+                Vector2 end = {screenCenter.x + x * zoom, screenCenter.y + 15.0f * zoom};
+                DrawLineV(start, end, {50, 55, 60, 100});
+            }
+            for (float y = -15.0f; y <= 15.0f; y += gridSize)
+            {
+                Vector2 start = {screenCenter.x - 20.0f * zoom, screenCenter.y + y * zoom};
+                Vector2 end = {screenCenter.x + 20.0f * zoom, screenCenter.y + y * zoom};
+                DrawLineV(start, end, {50, 55, 60, 100});
+            }
+
             for (const auto& point : playerTrail)
             {
                 DrawCircleV(point.position, 3.0f, {200, 60, 60, (unsigned char)(point.alpha * 255)});
