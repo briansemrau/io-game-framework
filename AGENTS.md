@@ -2,7 +2,22 @@
 
 ## Overview
 
-This is a C++23 CMake-based game project using [raylib](https://www.raylib.com/) for the client and [box2d](https://box2d.org/) for physics. The project builds two executables: `client` (graphics + physics) and `server` (physics only).
+This is a C++23 CMake-based game project using [raylib](https://www.raylib.com/) for the client and [box2d](https://box2d.org/) for physics. The project builds two executables: `client` (graphics + input) and `server` (physics simulation).
+
+This is not a throwaway prototype. The architecture is designed to be **extensible and reusable** for future projects. Consider: would this approach work for a different game?
+
+- Server-authoritative networking with rollback and client prediction
+- WebRTC or similar transport layers
+- Binary serialization (e.g., zpp::bits)
+
+**Design philosophy**: Simple, clean code first. Abstraction only when needed for extensibility. Build a solid foundation that can grow.
+
+**Architectural principles:**
+- **Common is the heart** - If something belongs in both client and server, it goes in common. The client is an extension, not a shortcut.
+- **Client handles presentation** - Renderer wraps game state, input generates events that manipulate state, client maintains local state for rollback and resimulation. Client does not own or directly control game state.
+- **Prefer future-proof over simple** - A slightly more complex approach that enables extensibility beats the simplest solution that paints you into a corner.
+- **Intentional architecture** - Explicit is better than implicit. Boundaries between systems should be clear, not accidental.
+- **No shortcuts** - Code written today is code you'll maintain forever.
 
 ## Build Commands
 
@@ -91,12 +106,26 @@ Use include guards (not `#pragma once`):
 ```
 src/
   client/     - Client executable code (graphics, input)
-  common/     - Shared code (game loop, state)
+  common/     - Shared code (game state, systems, physics)
   server/     - Server executable code (no graphics or input)
 thirdparty/
   raylib/     - Graphics library (git submodule)
   box2d/      - Physics library (git submodule)
 ```
+
+### Architecture Guidelines
+
+#### Server-Authoritative Design
+- All game logic lives in `common/` (shared between client/server)
+- Server owns physics truth; client predicts and interpolates
+- Game state is reproducible for rollback
+- Network protocol is an abstraction - prepare for WebRTC or similar
+
+#### Extensibility
+- Design for addition, not modification
+- New entity types should not require changes to core architecture
+- Consider serialization concerns early (snapshot/restore for rollback)
+- Use interfaces/abstractions where multiple implementations may be needed
 
 ### Testing
 - There are no automated tests in the main build
