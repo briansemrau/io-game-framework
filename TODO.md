@@ -1,90 +1,35 @@
-# Tasks
+# TODO.md - Cleanup Tasks
 
-## Phase 1: Top-Down Car Game Foundation
-- [x] (none yet - starting fresh)
+## Code Style Fixes
 
-## Implementation Tasks
-- [x] Create car entity with top-down physics in common module
-- [x] Add car control input handling in client  
-- [x] Add car rendering in client
-- [x] Add arena boundaries (walls)
-- [x] Build and verify the project compiles
-- [x] Test car drives on screen
+### Header Organization
+- [ ] Fix include order in `common_main.cpp` - stdlib before project headers
+- [ ] Fix include order in `car.cpp` - stdlib before project headers
+- [ ] Fix include order in `client_main.cpp` - stdlib before project headers
 
-## Review - Phase 1
-### What's Working
-- Car physics with top-down driving (throttle, steering, drift)
-- WASD/Arrow controls with handbrake (Space)
-- Arena boundaries keep car on screen
-- Both client and server build successfully
+### Type Fixes
+- [ ] Replace `enum CollisionBits` with `enum class` in `physics_settings.h`
+- [ ] Rename `#ifndef PHYSICS_H` to `#ifndef PHYSICS_SETTINGS_H` in `physics_settings.h`
+- [ ] Replace `<assert.h>` with `<cassert>` in `client_main.cpp`
 
-### Concerns
-- Car physics may need tuning (turn speed, drift factor)
-- No way to restart or reset the car if stuck
-- No multiplayer/networking implementation yet (architecture supports it)
-- Simple rectangle rendering, no sprites
+### Magic Numbers
+- [ ] Extract `1.0f / 60.0f` delta time to named constant in `common_main.cpp`
+- [ ] Replace `3.14159f` with `PI` from `<cmath>` in `common_main.cpp`
+- [ ] Move hardcoded arena dimensions to constants in `common_main.cpp`
 
-## Next Phase
-- [x] Tune car physics parameters for better feel
-- [x] Add basic obstacle inside arena
-- [x] Add multiple cars for demo/testing
-- [ ] Consider adding simple car sprite/graphics
+### Duplicate Definitions
+- [ ] Consolidate `CollisionBits` and `CarCollisionBits` to single authoritative source
+- [ ] Update all collision bit references to use consolidated enum
 
-## Review - Phase 2
-### What's Working
-- Added 6 obstacles to the arena for collision testing
-- Added 3 AI cars that drive around autonomously
-- Player car (red) vs AI cars (blue)
-- Full physics simulation working
+### Dead Code Removal
+- [ ] Remove unused `src/CMakeLists.txt` subdirectory
+- [ ] Remove unused `updateAICars` forward declaration or implement it properly (common_main.cpp:14)
 
-### Concerns
-- AI cars drive in circles/patterns, not intelligent
-- No collision between player and AI cars yet
-- Simple rectangle rendering, no sprites
+### Toggleable Debug Draw Integration
+- [ ] Make debug draw toggleable in client (e.g., press 'D' key to enable/disable)
+- [ ] Integrate `b2RaylibDebugDraw()` into client render loop when enabled
 
-## Phase 3: Game Improvements
-- [x] Add reset key (R) to restart game
-- [x] Improve AI behavior
-- [x] Add car-to-car collision (already works via box2d)
+## Minor Improvements
 
-## Phase 4: Damage System
-- [ ] Add collision damage based on impact velocity (deferred - box2d v3 API issues)
-- [ ] Show car health/color changes on damage
-- [ ] Destroy cars when health reaches zero
-- [ ] Add victory condition
-
-Note: Collision damage requires box2d v3 contact events API. Deferred for now.
-
-## Phase 5: Polish
-- [x] Improve car colors based on health (deferred - needs damage system)
-- [x] Add more arena elements (obstacles already added)
-- [x] Better visual feedback (HUD, zoom)
-- [x] Add zoom control with mouse wheel
-- [x] Add speed indicator
-- [x] Add more AI cars for action
-- [x] Add car trail/particle effects
-
-## Phase 6: Additional Improvements
-- [x] Add different colors for AI cars
-- [x] Add improved AI behavior (chase player)
-- [x] Both client and server build successfully
-
-## Completed Features Summary
-- Top-down car physics with drift mechanics
-- Player controls (WASD/Arrows + handbrake)
-- 5 AI opponents with different colors (chase player)
-- 6 obstacles in arena
-- Arena with background grid
-- Drift trail particle effect (long lasting)
-- Zoom control (mouse wheel)
-- Speed indicator
-- Extended HUD with enemy count
-- Reset key (R)
-- Window title with instructions
-- Player car color changes when handbrake is used
-- Both client and server compile successfully
-
-## Design Notes
-- Top-down car uses raycast or custom movement (not standard platformer gravity)
-- Car has: position, rotation, velocity, angular velocity, acceleration
-- Controls: accelerate forward/backward, turn left/right, handbrake
+- [ ] Add graceful exit condition to server (e.g., signal handling or stdin check)
+- [ ] Add `[[nodiscard]]` to functions that return important values where appropriate
