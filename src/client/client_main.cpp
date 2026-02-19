@@ -1,16 +1,19 @@
 #include "raylib.h"
-#include <vector>
-
 #include "box2d/box2d.h"
-#include <iostream>
-#include <format>
-#include <assert.h>
+
 #include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <format>
+#include <iostream>
+#include <numbers>
 #include <type_traits>
+#include <vector>
 
 #include "physics_settings.h"
 
 #include "common_main.h"
+#include "debug_draw.h"
 
 struct TrailPoint
 {
@@ -30,6 +33,8 @@ int main() {
     Car& playerCar = getPlayerCar();
     float zoom = 30.0f;
     std::vector<TrailPoint> playerTrail;
+    bool debugDrawEnabled = false;
+    b2DebugDraw debugDraw = b2RaylibDebugDraw();
 
     SetWindowTitle("Destruction Derby - Drive with WASD, Handbrake: Space, Reset: R");
 
@@ -55,6 +60,7 @@ int main() {
         if (IsKeyDown(KEY_SPACE)) handbrakeInput = true;
         
         if (IsKeyPressed(KEY_R)) resetGame();
+        if (IsKeyPressed(KEY_G)) debugDrawEnabled = !debugDrawEnabled;
         
         carSetInput(playerCar, throttleInput, turnInput, handbrakeInput);
         
@@ -138,7 +144,7 @@ int main() {
                 DrawRectanglePro(
                     {obstacleScreenPos.x, obstacleScreenPos.y, obstacleScreenW, obstacleScreenH},
                     {obstacleScreenW / 2.0f, obstacleScreenH / 2.0f},
-                    obstacle.angle * (180.0f / 3.14159f),
+                    obstacle.angle * (180.0f / std::numbers::pi),
                     {100, 100, 110, 255}
                 );
             }
@@ -151,7 +157,7 @@ int main() {
             DrawRectanglePro(
                 {carScreenPos.x, carScreenPos.y, carScreenW, carScreenH},
                 {carScreenW / 2.0f, carScreenH / 2.0f},
-                carAngle * (180.0f / 3.14159f),
+                carAngle * (180.0f / std::numbers::pi),
                 playerCarColor
             );
 
@@ -192,12 +198,12 @@ int main() {
                 DrawRectanglePro(
                     {aiCarScreenPos.x, aiCarScreenPos.y, aiCarScreenW, aiCarScreenH},
                     {aiCarScreenW / 2.0f, aiCarScreenH / 2.0f},
-                    aiCarAngle * (180.0f / 3.14159f),
+                    aiCarAngle * (180.0f / std::numbers::pi),
                     aiColor
                 );
             }
 
-            const char* controls = "WASD/Arrows: Drive | Space: Handbrake | R: Reset | Scroll: Zoom";
+            const char* controls = "WASD/Arrows: Drive | Space: Handbrake | R: Reset | G: Debug | Scroll: Zoom";
             DrawText(controls, 10, GetScreenHeight() - 30, 20, LIGHTGRAY);
             
             DrawFPS(GetScreenWidth() - 100, 10);
@@ -230,6 +236,11 @@ int main() {
                     miniMapPos.y + miniMapSize/2 + aiPos.y * miniMapScale
                 };
                 DrawCircleV(aiMiniPos, 3.0f, {50, 50, 255, 255});
+            }
+
+            if (debugDrawEnabled)
+            {
+                // b2World_DrawWorld(getWorldId(), &debugDraw); // TODO what is the right function?
             }
         }
         EndDrawing();

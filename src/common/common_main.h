@@ -15,10 +15,10 @@ struct Obstacle
 void initCommon();
 void stepCommon();
 void resetGame();
-b2WorldId getWorldId();
-Car& getPlayerCar();
-const std::vector<Obstacle>& getObstacles();
-const std::vector<Car>& getAICars();
+[[nodiscard]] b2WorldId getWorldId();
+[[nodiscard]] Car& getPlayerCar();
+[[nodiscard]] const std::vector<Obstacle>& getObstacles();
+[[nodiscard]] const std::vector<Car>& getAICars();
 void addAICar(b2Vec2 position);
 
 #endif // COMMON_MAIN_H

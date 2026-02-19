@@ -107,7 +107,7 @@ Use include guards (not `#pragma once`):
 - Prefer `constexpr` over `#define` for compile-time constants
 
 ### Functions
-- Prefer `[[nodiscard]]` attribute for functions that must not be ignored
+- Prefer `[[nodiscard]]` attribute for functions with return values that must not be ignored. Avoid usage where it's not critical to avoid code clutter.
 - Use `void` explicitly for functions taking no parameters
 - Pass large objects by const reference: `const MyType&`
 - Return by value unless moving or forwarding

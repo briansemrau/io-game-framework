@@ -1,17 +1,27 @@
+#include "box2d/box2d.h"
+
+#include <cmath>
+#include <cstddef>
+#include <numbers>
+#include <vector>
+
 #include "common_main.h"
 #include "physics_settings.h"
-#include <cstddef>
-#include <vector>
-#include <cmath>
+
+static constexpr float DeltaTime = 1.0f / 60.0f;
+static constexpr float ArenaWidth = 40.0f;
+static constexpr float ArenaHeight = 30.0f;
+static constexpr float ArenaMinX = -ArenaWidth / 2.0f;
+static constexpr float ArenaMinY = -ArenaHeight / 2.0f;
+static constexpr float ArenaMaxX = ArenaWidth / 2.0f;
+static constexpr float ArenaMaxY = ArenaHeight / 2.0f;
 
 static b2WorldId worldId;
 static Car playerCar;
 static std::vector<Car> aiCars;
-static b2Vec2 arenaMin = {-20.0f, -15.0f};
-static b2Vec2 arenaMax = {20.0f, 15.0f};
+static b2Vec2 arenaMin = {ArenaMinX, ArenaMinY};
+static b2Vec2 arenaMax = {ArenaMaxX, ArenaMaxY};
 static std::vector<Obstacle> obstacles;
-
-void updateAICars();
 
 void createArenaWall(b2Vec2 center, b2Vec2 halfSize)
 {
@@ -27,8 +37,8 @@ void createArenaWall(b2Vec2 center, b2Vec2 halfSize)
     material.friction = 0.5f;
     material.restitution = 0.2f;
     shapeDef.material = material;
-    shapeDef.filter.categoryBits = static_cast<uint64_t>(CarCollisionBits::StaticBit);
-    shapeDef.filter.maskBits = static_cast<uint64_t>(CarCollisionBits::CarBit);
+    shapeDef.filter.categoryBits = static_cast<uint64_t>(CollisionBits::StaticBit);
+    shapeDef.filter.maskBits = static_cast<uint64_t>(CollisionBits::CarBit);
 
     b2CreatePolygonShape(wallId, &shapeDef, &polygon);
 }
@@ -49,8 +59,8 @@ void createObstacle(b2Vec2 center, b2Vec2 halfSize, float angle = 0.0f)
     material.friction = 0.7f;
     material.restitution = 0.3f;
     shapeDef.material = material;
-    shapeDef.filter.categoryBits = static_cast<uint64_t>(CarCollisionBits::StaticBit);
-    shapeDef.filter.maskBits = static_cast<uint64_t>(CarCollisionBits::CarBit);
+    shapeDef.filter.categoryBits = static_cast<uint64_t>(CollisionBits::StaticBit);
+    shapeDef.filter.maskBits = static_cast<uint64_t>(CollisionBits::CarBit);
 
     b2CreatePolygonShape(obstacleId, &shapeDef, &polygon);
 }
@@ -95,8 +105,54 @@ void initCommon() {
     }, nullptr);
 }
 
+void updateAICars()
+{
+    static float time = 0.0f;
+    time += DeltaTime;
+    
+    b2Vec2 playerPos = b2Body_GetTransform(playerCar.bodyId).p;
+    
+    int index = 0;
+    for (auto& aiCar : aiCars)
+    {
+        b2Vec2 carPos = b2Body_GetTransform(aiCar.bodyId).p;
+        
+        float followPlayer = (index % 2 == 0) ? 0.7f : 0.0f;
+        float targetX, targetY;
+        
+        if (followPlayer > 0.0f)
+        {
+            targetX = playerPos.x + sinf(time * 0.5f + (float)index * 1.5f) * 3.0f;
+            targetY = playerPos.y + cosf(time * 0.3f + (float)index * 1.5f) * 3.0f;
+        }
+        else
+        {
+            targetX = carPos.x + sinf(time * 0.5f + (float)index) * 8.0f;
+            targetY = carPos.y + cosf(time * 0.3f + (float)index) * 8.0f;
+        }
+        
+        b2Vec2 toTarget = {targetX - carPos.x, targetY - carPos.y};
+        float targetAngle = atan2f(toTarget.x, toTarget.y);
+        
+        b2Transform transform = b2Body_GetTransform(aiCar.bodyId);
+        float currentAngle = b2Rot_GetAngle(transform.q);
+        
+        float angleDiff = targetAngle - currentAngle;
+        while (angleDiff > std::numbers::pi) angleDiff -= 2.0f * std::numbers::pi;
+        while (angleDiff < -std::numbers::pi) angleDiff += 2.0f * std::numbers::pi;
+        
+        float turnInput = angleDiff * 2.0f;
+        if (turnInput > 1.0f) turnInput = 1.0f;
+        if (turnInput < -1.0f) turnInput = -1.0f;
+        
+        float throttleInput = 0.6f + followPlayer * 0.3f;
+        carSetInput(aiCar, throttleInput, turnInput, false);
+        index++;
+    }
+}
+
 void stepCommon() {
-    float deltaTime = 1.0f / 60.0f;
+    float deltaTime = DeltaTime;
     carUpdate(playerCar, deltaTime);
     updateAICars();
     b2World_Step(worldId, deltaTime, 4);
@@ -147,50 +203,4 @@ void addAICar(b2Vec2 position)
 
 const std::vector<Car>& getAICars() {
     return aiCars;
-}
-
-void updateAICars()
-{
-    static float time = 0.0f;
-    time += 1.0f / 60.0f;
-    
-    b2Vec2 playerPos = b2Body_GetTransform(playerCar.bodyId).p;
-    
-    int index = 0;
-    for (auto& aiCar : aiCars)
-    {
-        b2Vec2 carPos = b2Body_GetTransform(aiCar.bodyId).p;
-        
-        float followPlayer = (index % 2 == 0) ? 0.7f : 0.0f;
-        float targetX, targetY;
-        
-        if (followPlayer > 0.0f)
-        {
-            targetX = playerPos.x + sinf(time * 0.5f + (float)index * 1.5f) * 3.0f;
-            targetY = playerPos.y + cosf(time * 0.3f + (float)index * 1.5f) * 3.0f;
-        }
-        else
-        {
-            targetX = carPos.x + sinf(time * 0.5f + (float)index) * 8.0f;
-            targetY = carPos.y + cosf(time * 0.3f + (float)index) * 8.0f;
-        }
-        
-        b2Vec2 toTarget = {targetX - carPos.x, targetY - carPos.y};
-        float targetAngle = atan2f(toTarget.x, toTarget.y);
-        
-        b2Transform transform = b2Body_GetTransform(aiCar.bodyId);
-        float currentAngle = b2Rot_GetAngle(transform.q);
-        
-        float angleDiff = targetAngle - currentAngle;
-        while (angleDiff > 3.14159f) angleDiff -= 2.0f * 3.14159f;
-        while (angleDiff < -3.14159f) angleDiff += 2.0f * 3.14159f;
-        
-        float turnInput = angleDiff * 2.0f;
-        if (turnInput > 1.0f) turnInput = 1.0f;
-        if (turnInput < -1.0f) turnInput = -1.0f;
-        
-        float throttleInput = 0.6f + followPlayer * 0.3f;
-        carSetInput(aiCar, throttleInput, turnInput, false);
-        index++;
-    }
 }

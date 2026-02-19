@@ -1,6 +1,9 @@
+#include "box2d/box2d.h"
+
+#include <cmath>
+
 #include "car.h"
 #include "physics_settings.h"
-#include <cmath>
 
 void createCar(b2WorldId worldId, Car& car, b2Vec2 position)
 {
@@ -34,8 +37,8 @@ void createCar(b2WorldId worldId, Car& car, b2Vec2 position)
     material.friction = 0.3f;
     material.restitution = 0.1f;
     shapeDef.material = material;
-    shapeDef.filter.categoryBits = static_cast<uint64_t>(CarCollisionBits::CarBit);
-    shapeDef.filter.maskBits = static_cast<uint64_t>(CarCollisionBits::StaticBit) | static_cast<uint64_t>(CarCollisionBits::CarBit);
+    shapeDef.filter.categoryBits = static_cast<uint64_t>(CollisionBits::CarBit);
+    shapeDef.filter.maskBits = static_cast<uint64_t>(CollisionBits::StaticBit) | static_cast<uint64_t>(CollisionBits::CarBit);
 
     b2CreatePolygonShape(car.bodyId, &shapeDef, &polygon);
 }

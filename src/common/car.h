@@ -4,6 +4,8 @@
 #include "box2d/box2d.h"
 #include <cstdint>
 
+#include "physics_settings.h"
+
 struct Car
 {
     b2BodyId bodyId;
@@ -20,12 +22,6 @@ struct Car
     float throttleInput;
     float turnInput;
     bool handbrakeInput;
-};
-
-enum class CarCollisionBits : uint64_t
-{
-    StaticBit = 0x0001,
-    CarBit = 0x0002,
 };
 
 void createCar(b2WorldId worldId, Car& car, b2Vec2 position);

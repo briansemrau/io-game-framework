@@ -1,20 +1,19 @@
-#ifndef PHYSICS_H
-#define PHYSICS_H
+#ifndef PHYSICS_SETTINGS_H
+#define PHYSICS_SETTINGS_H
 
 #include <cstdint>
 
-// TODO does box2d v3 have a recommended physics user customization header?
-
 static constexpr float pixelsPerMeter = 64.0f;
 
-enum CollisionBits : uint64_t
+enum class CollisionBits : uint64_t
 {
 	StaticBit = 0x0001,
-	MoverBit = 0x0002,
-	DynamicBit = 0x0004,
-	DebrisBit = 0x0008,
+	CarBit = 0x0002,
+	MoverBit = 0x0004,
+	DynamicBit = 0x0008,
+	DebrisBit = 0x0010,
 
 	AllBits = ~0u,
 };
 
-#endif // PHYSICS_H
+#endif // PHYSICS_SETTINGS_H
