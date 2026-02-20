@@ -11,7 +11,7 @@ Take a look at the AGENTS.md and the current project. Look through and identify 
 ```
 
 ```
-I need you to reset TODO.md and add a new set of tasks to address the more trivial issues. I plan to add some dependencies to enable networking and serialization, and I will define the robust architecture around rollback and resim. So create a list of tasks to clean up what already exists, but not to implement any new features.
+Update TODO.md with a detailed list of changes to implement based off of ARCHITECTURAL_REVIEW.md.
 ```
 
 # Implement TODO
