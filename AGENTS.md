@@ -106,8 +106,7 @@ Use include guards or `#pragma once` (both are acceptable):
 - Use `enum class` for new enums - provides type safety and scoped values
 - Use C-style enums with explicit underlying type only for bitflags:
   ```cpp
-  enum CollisionBits : uint64_t
-  {
+  enum CollisionBits : uint64_t {
       StaticBit = 0x0001,
       DynamicBit = 0x0004,
   };
@@ -118,9 +117,9 @@ Use include guards or `#pragma once` (both are acceptable):
 - Use `std::span` for passing arrays or buffer views
 
 ### Functions
-- Prefer `[[nodiscard]]` for functions whose return values must not be ignored
+- Only use `[[nodiscard]]` for functions where ignoring the return value is dangerous
 - Use `[[maybe_unused]]` for intentionally unused parameters
-- Mark functions `noexcept` when they are guaranteed not to throw
+- Use `noexcept` for move constructors that are guaranteed not to throw
 - Pass large objects by const reference: `const MyType&`
 - Return by value unless moving, forwarding, or returning a reference
 

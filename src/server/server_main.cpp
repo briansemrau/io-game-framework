@@ -1,4 +1,4 @@
-#include "common_main.h"
+#include "game_state.h"
 
 #include <chrono>
 #include <iostream>

@@ -13,7 +13,7 @@
 
 #include "physics_settings.h"
 
-#include "common_main.h"
+#include "game_state.h"
 #include "debug_draw.h"
 
 struct TrailPoint
