@@ -1,22 +1,14 @@
 #ifndef GAME_STATE_H
 #define GAME_STATE_H
 
-#include "box2d/box2d.h"
-
 #include <memory>
 #include <vector>
 
-#include "ai_system.h"
+#include "box2d/box2d.h"
 #include "car.h"
 
 static constexpr uint32_t FixedTimestepsPerSecond = 60;
 static constexpr float FixedTimestepDuration = 1.0f / static_cast<float>(FixedTimestepsPerSecond);
-
-struct Obstacle {
-    b2Vec2 position;
-    b2Vec2 halfSize;
-    float angle;
-};
 
 class GameState {
 public:
@@ -30,39 +22,23 @@ public:
     static constexpr float ArenaMaxX = ArenaWidth / 2.0f;
     static constexpr float ArenaMaxY = ArenaHeight / 2.0f;
 
-    GameState() = default;
-    ~GameState();
+    GameState();
+    virtual ~GameState();
+    GameState(const GameState &);
+    GameState(const GameState &&) noexcept;
+    GameState &operator=(const GameState &);
+    GameState &operator=(const GameState &&) noexcept;
 
-    GameState(const GameState&) = delete;
-    GameState& operator=(const GameState&) = delete;
-    GameState(GameState&&) noexcept = default;
-    GameState& operator=(GameState&&) noexcept = default;
-
-    void init();
-    void shutdown();
     void reset();
     void step();
 
     b2WorldId getWorldId() const { return worldId; }
-    Car& getPlayerCar() { return playerCar; }
-    const Car& getPlayerCar() const { return playerCar; }
-    const std::vector<Car>& getAICars() const { return aiCars; }
-    const std::vector<Obstacle>& getObstacles() const { return obstacles; }
-
-    void addAICar(b2Vec2 position);
 
 private:
     void createArenaWall(b2Vec2 center, b2Vec2 halfSize);
-    void createObstacle(b2Vec2 center, b2Vec2 halfSize, float angle = 0.0f);
-    void createObstacles();
     void createArena();
-    void destroyAllCars();
 
     b2WorldId worldId{};
-    Car playerCar;
-    std::vector<Car> aiCars;
-    std::vector<Obstacle> obstacles;
-    AISystem aiSystem;
 };
 
-#endif // GAME_STATE_H
+#endif  // GAME_STATE_H

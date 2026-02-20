@@ -1,0 +1,10 @@
+BasedOnStyle: Google
+IndentWidth: 4
+Language: Cpp
+AccessModifierOffset: -4
+ColumnLimit: 180
+# DerivePointerAlignment: false
+# PointerAlignment: Right
+# AlignAfterOpenBracket: false
+# AlignArrayOfStructures: AIAS_Right
+# AlignConsecutiveAssignments: false

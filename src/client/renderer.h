@@ -5,28 +5,22 @@
 
 #include "game_state.h"
 
+// Data specific to the current window
+// (we do not handle multiple cameras)
 struct RenderState {
-    float zoom = 30.0f;
     bool debugDrawEnabled = false;
-    bool handbrake = false;
+    // TODO camera
+    // 
 };
 
 class Renderer {
 public:
     void render(const GameState& gameState, const RenderState& renderState);
 
-    void setZoom(float zoom);
-    float getZoom() const;
-    void handleMouseWheel(float delta);
-
 private:
-    void renderCar(const Car& car, Vector2 screenPos, float zoom, Color color);
-    void renderPlayerCar(const Car& car, Vector2 screenPos, float zoom, bool handbrake);
+    // void renderCar(const Car& car, Vector2 screenPos, float zoom, Color color);
 
-    float m_zoom = 30.0f;
-    static constexpr float MinZoom = 10.0f;
-    static constexpr float MaxZoom = 60.0f;
-    static constexpr float ZoomDelta = 5.0f;
+    // TODO register renderer for a given entity
 };
 
 #endif // RENDERER_H
