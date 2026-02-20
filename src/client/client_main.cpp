@@ -64,7 +64,7 @@ int main() {
         
         carSetInput(playerCar, throttleInput, turnInput, handbrakeInput);
         
-        stepCommon();
+        fixedTimestep();
         
         b2Vec2 carPos = b2Body_GetTransform(playerCar.bodyId).p;
         b2Vec2 velocity = b2Body_GetLinearVelocity(playerCar.bodyId);

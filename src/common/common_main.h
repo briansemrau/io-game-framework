@@ -13,7 +13,7 @@ struct Obstacle
 };
 
 void initCommon();
-void stepCommon();
+void fixedTimestep();
 void resetGame();
 [[nodiscard]] b2WorldId getWorldId();
 [[nodiscard]] Car& getPlayerCar();

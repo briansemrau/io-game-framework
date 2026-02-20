@@ -151,7 +151,7 @@ void updateAICars()
     }
 }
 
-void stepCommon() {
+void fixedTimestep() {
     float deltaTime = DeltaTime;
     carUpdate(playerCar, deltaTime);
     updateAICars();
