@@ -84,6 +84,10 @@ b2Vec2 Car::getPosition() const {
     return b2Body_GetTransform(bodyId).p;
 }
 
+b2Vec2 Car::getVelocity() const {
+    return b2Body_GetLinearVelocity(bodyId).p;
+}
+
 float Car::getAngle() const {
     return b2Rot_GetAngle(b2Body_GetTransform(bodyId).q);
 }

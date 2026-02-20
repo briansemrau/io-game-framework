@@ -32,8 +32,9 @@ int main() {
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
 
-    initCommon();
-    Car& playerCar = getPlayerCar();
+    GameState game_state;
+
+    Car& playerCar = game_state.getPlayerCar();
     float zoom = 30.0f;
     std::vector<TrailPoint> playerTrail;
     bool debugDrawEnabled = false;
@@ -78,7 +79,7 @@ int main() {
         if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) turnInput += 1.0f;
         if (IsKeyDown(KEY_SPACE)) handbrakeInput = true;
         
-        if (IsKeyPressed(KEY_R)) resetGame();
+        if (IsKeyPressed(KEY_R)) game_state.reset();
         if (IsKeyPressed(KEY_G)) debugDrawEnabled = !debugDrawEnabled;
         
         carSetInput(playerCar, throttleInput, turnInput, handbrakeInput);
@@ -92,17 +93,16 @@ int main() {
         // Do work
         const auto current_timestep = Seconds(fixed_timestep_duration) * timescale;
         if (remainingTime >= current_timestep) {
-            fixedTimestep();
+            game_state.step();
             remainingTime -= current_timestep;
         }
         
         // Rendering
-        b2Vec2 carPos = b2Body_GetTransform(playerCar.bodyId).p;
-        b2Vec2 velocity = b2Body_GetLinearVelocity(playerCar.bodyId);
+        b2Vec2 carPos = playerCar.getPosition();
+        b2Vec2 velocity = playerCar.getVelocity();
         float speed = b2Length(velocity);
         
-        if (speed > 5.0f || handbrakeInput)
-        {
+        if (speed > 5.0f || handbrakeInput) {
             Vector2 screenCenter = { (float)GetScreenWidth() / 2.0f, (float)GetScreenHeight() / 2.0f };
             Vector2 screenPos = {
                 screenCenter.x + carPos.x * zoom,
@@ -112,8 +112,7 @@ int main() {
             if (playerTrail.size() > 60) playerTrail.erase(playerTrail.begin());
         }
         
-        for (auto& point : playerTrail)
-        {
+        for (auto& point : playerTrail) {
             point.alpha -= 0.015f;
         }
         playerTrail.erase(
@@ -146,26 +145,22 @@ int main() {
             DrawRectangleLinesEx(arenaRect, 4.0f, {80, 90, 100, 255});
 
             float gridSize = 5.0f;
-            for (float x = -20.0f; x <= 20.0f; x += gridSize)
-            {
+            for (float x = -20.0f; x <= 20.0f; x += gridSize) {
                 Vector2 start = {screenCenter.x + x * zoom, screenCenter.y - 15.0f * zoom};
                 Vector2 end = {screenCenter.x + x * zoom, screenCenter.y + 15.0f * zoom};
                 DrawLineV(start, end, {50, 55, 60, 100});
             }
-            for (float y = -15.0f; y <= 15.0f; y += gridSize)
-            {
+            for (float y = -15.0f; y <= 15.0f; y += gridSize) {
                 Vector2 start = {screenCenter.x - 20.0f * zoom, screenCenter.y + y * zoom};
                 Vector2 end = {screenCenter.x + 20.0f * zoom, screenCenter.y + y * zoom};
                 DrawLineV(start, end, {50, 55, 60, 100});
             }
 
-            for (const auto& point : playerTrail)
-            {
+            for (const auto& point : playerTrail) {
                 DrawCircleV(point.position, 3.0f, {200, 60, 60, (unsigned char)(point.alpha * 255)});
             }
 
-            for (const auto& obstacle : getObstacles())
-            {
+            for (const auto& obstacle : game_state.getObstacles()) {
                 Vector2 obstacleScreenPos = {
                     screenCenter.x + obstacle.position.x * zoom,
                     screenCenter.y + obstacle.position.y * zoom
@@ -202,9 +197,8 @@ int main() {
             };
             DrawCircleV(frontLightPos, 4.0f, {255, 255, 150, 255});
 
-            for (size_t i = 0; i < getAICars().size(); i++)
-            {
-                const auto& aiCar = getAICars()[i];
+            for (size_t i = 0; i < game_state.getAICars().size(); i++) {
+                const auto& aiCar = game_state.getAICars()[i];
                 b2Vec2 aiCarPos = b2Body_GetTransform(aiCar.bodyId).p;
                 b2Rot aiCarRot = b2Body_GetTransform(aiCar.bodyId).q;
                 float aiCarAngle = b2Rot_GetAngle(aiCarRot);
@@ -244,8 +238,7 @@ int main() {
             DrawText(std::format("Speed: {:.1f}", speed).c_str(), 10, 10, 20, LIGHTGRAY);
             
             int aiAlive = 0;
-            for (const auto& aiCar : getAICars())
-            {
+            for (const auto& aiCar : game_state.getAICars()) {
                 if (aiCar.health > 0) aiAlive++;
             }
             DrawText(std::format("Enemies: {}", aiAlive).c_str(), GetScreenWidth() - 200, 90, 20, GRAY);
@@ -259,8 +252,7 @@ int main() {
             b2Vec2 playerPos = b2Body_GetTransform(playerCar.bodyId).p;
             DrawCircleV({miniMapPos.x + miniMapSize/2 + playerPos.x * miniMapScale, miniMapPos.y + miniMapSize/2 + playerPos.y * miniMapScale}, 4.0f, {255, 50, 50, 255});
             
-            for (const auto& aiCar : getAICars())
-            {
+            for (const auto& aiCar : game_state.getAICars()) {
                 b2Vec2 aiPos = b2Body_GetTransform(aiCar.bodyId).p;
                 Vector2 aiMiniPos = {
                     miniMapPos.x + miniMapSize/2 + aiPos.x * miniMapScale,
@@ -269,8 +261,7 @@ int main() {
                 DrawCircleV(aiMiniPos, 3.0f, {50, 50, 255, 255});
             }
 
-            if (debugDrawEnabled)
-            {
+            if (debugDrawEnabled) {
                 // b2World_DrawWorld(getWorldId(), &debugDraw); // TODO what is the right function?
             }
         }

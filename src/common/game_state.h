@@ -42,11 +42,11 @@ public:
     void reset();
     void step();
 
-    [[nodiscard]] b2WorldId getWorldId() const { return worldId; }
-    [[nodiscard]] Car& getPlayerCar() { return playerCar; }
-    [[nodiscard]] const Car& getPlayerCar() const { return playerCar; }
-    [[nodiscard]] const std::vector<Car>& getAICars() const { return aiCars; }
-    [[nodiscard]] const std::vector<Obstacle>& getObstacles() const { return obstacles; }
+    b2WorldId getWorldId() const { return worldId; }
+    Car& getPlayerCar() { return playerCar; }
+    const Car& getPlayerCar() const { return playerCar; }
+    const std::vector<Car>& getAICars() const { return aiCars; }
+    const std::vector<Obstacle>& getObstacles() const { return obstacles; }
 
     void addAICar(b2Vec2 position);
 
@@ -64,16 +64,5 @@ private:
     std::vector<Obstacle> obstacles;
     float aiTimer = 0.0f;
 };
-
-[[nodiscard]] GameState& getGameState();
-
-void initCommon();
-void fixedTimestep();
-void resetGame();
-[[nodiscard]] b2WorldId getWorldId();
-[[nodiscard]] Car& getPlayerCar();
-[[nodiscard]] const std::vector<Obstacle>& getObstacles();
-[[nodiscard]] const std::vector<Car>& getAICars();
-void addAICar(b2Vec2 position);
 
 #endif // GAME_STATE_H

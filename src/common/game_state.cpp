@@ -6,18 +6,11 @@
 #include "game_state.h"
 #include "physics_settings.h"
 
-namespace
-{
-    std::unique_ptr<GameState> gGameState;
-}
-
-GameState::~GameState()
-{
+GameState::~GameState() {
     shutdown();
 }
 
-void GameState::init()
-{
+void GameState::init() {
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, 0.0f};
     worldId = b2CreateWorld(&worldDef);
@@ -33,26 +26,19 @@ void GameState::init()
     addAICar({-8.0f, 3.0f});
     
     b2World_SetPreSolveCallback(worldId, [](b2ShapeId shapeIdA, b2ShapeId shapeIdB, b2Vec2 point, b2Vec2 normal, void*) -> bool {
-        (void)shapeIdA;
-        (void)shapeIdB;
-        (void)point;
-        (void)normal;
         return true;
     }, nullptr);
 }
 
-void GameState::shutdown()
-{
+void GameState::shutdown() {
     destroyAllCars();
-    if (b2World_IsValid(worldId))
-    {
+    if (b2World_IsValid(worldId)) {
         b2DestroyWorld(worldId);
     }
     worldId = {};
 }
 
-void GameState::reset()
-{
+void GameState::reset() {
     destroyAllCars();
     playerCar.create(worldId, {0.0f, 0.0f});
 
@@ -63,32 +49,27 @@ void GameState::reset()
     addAICar({-8.0f, 3.0f});
 }
 
-void GameState::step()
-{
+void GameState::step() {
     const float deltaTime = FixedTimestepDuration;
     playerCar.update(deltaTime);
     updateAICars();
     b2World_Step(worldId, deltaTime, 4);
 }
 
-void GameState::addAICar(b2Vec2 position)
-{
+void GameState::addAICar(b2Vec2 position) {
     aiCars.emplace_back();
     aiCars.back().create(worldId, position);
 }
 
-void GameState::destroyAllCars()
-{
-    for (auto& car : aiCars)
-    {
+void GameState::destroyAllCars() {
+    for (auto& car : aiCars) {
         car.destroy();
     }
     aiCars.clear();
     playerCar.destroy();
 }
 
-void GameState::createArenaWall(b2Vec2 center, b2Vec2 halfSize)
-{
+void GameState::createArenaWall(b2Vec2 center, b2Vec2 halfSize) {
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_staticBody;
     bodyDef.position = center;
@@ -107,8 +88,7 @@ void GameState::createArenaWall(b2Vec2 center, b2Vec2 halfSize)
     b2CreatePolygonShape(wallId, &shapeDef, &polygon);
 }
 
-void GameState::createObstacle(b2Vec2 center, b2Vec2 halfSize, float angle)
-{
+void GameState::createObstacle(b2Vec2 center, b2Vec2 halfSize, float angle) {
     obstacles.push_back({center, halfSize, angle});
 
     b2BodyDef bodyDef = b2DefaultBodyDef();
@@ -129,8 +109,7 @@ void GameState::createObstacle(b2Vec2 center, b2Vec2 halfSize, float angle)
     b2CreatePolygonShape(obstacleId, &shapeDef, &polygon);
 }
 
-void GameState::createObstacles()
-{
+void GameState::createObstacles() {
     createObstacle({5.0f, 5.0f}, {1.5f, 1.5f});
     createObstacle({-6.0f, -4.0f}, {1.0f, 3.0f});
     createObstacle({8.0f, -5.0f}, {2.0f, 1.0f}, 0.785f);
@@ -139,8 +118,7 @@ void GameState::createObstacles()
     createObstacle({-10.0f, 2.0f}, {1.5f, 2.0f}, -0.5f);
 }
 
-void GameState::createArena()
-{
+void GameState::createArena() {
     const float wallThickness = 1.0f;
     const b2Vec2 min{ArenaMinX, ArenaMinY};
     const b2Vec2 max{ArenaMaxX, ArenaMaxY};
@@ -151,28 +129,23 @@ void GameState::createArena()
     createArenaWall({min.x - wallThickness, 0.0f}, {wallThickness, max.y + wallThickness});
 }
 
-void GameState::updateAICars()
-{
+void GameState::updateAICars() {
     aiTimer += FixedTimestepDuration;
     
     const b2Vec2 playerPos = playerCar.getPosition();
     
     int index = 0;
-    for (auto& aiCar : aiCars)
-    {
+    for (auto& aiCar : aiCars) {
         const b2Vec2 carPos = aiCar.getPosition();
         
         const float followPlayer = (index % 2 == 0) ? 0.7f : 0.0f;
         float targetX;
         float targetY;
         
-        if (followPlayer > 0.0f)
-        {
+        if (followPlayer > 0.0f) {
             targetX = playerPos.x + std::sinf(aiTimer * 0.5f + static_cast<float>(index) * 1.5f) * 3.0f;
             targetY = playerPos.y + std::cosf(aiTimer * 0.3f + static_cast<float>(index) * 1.5f) * 3.0f;
-        }
-        else
-        {
+        } else {
             targetX = carPos.x + std::sinf(aiTimer * 0.5f + static_cast<float>(index)) * 8.0f;
             targetY = carPos.y + std::cosf(aiTimer * 0.3f + static_cast<float>(index)) * 8.0f;
         }
@@ -194,53 +167,4 @@ void GameState::updateAICars()
         aiCar.setInput(throttleInput, turnInput, false);
         index++;
     }
-}
-
-GameState& getGameState()
-{
-    if (!gGameState)
-    {
-        gGameState = std::make_unique<GameState>();
-    }
-    return *gGameState;
-}
-
-void initCommon()
-{
-    getGameState().init();
-}
-
-void fixedTimestep()
-{
-    getGameState().step();
-}
-
-void resetGame()
-{
-    getGameState().reset();
-}
-
-b2WorldId getWorldId()
-{
-    return getGameState().getWorldId();
-}
-
-Car& getPlayerCar()
-{
-    return getGameState().getPlayerCar();
-}
-
-const std::vector<Obstacle>& getObstacles()
-{
-    return getGameState().getObstacles();
-}
-
-void addAICar(b2Vec2 position)
-{
-    getGameState().addAICar(position);
-}
-
-const std::vector<Car>& getAICars()
-{
-    return getGameState().getAICars();
 }

@@ -6,8 +6,7 @@
 
 #include "physics_settings.h"
 
-class Car
-{
+class Car {
 public:
     Car() = default;
 
@@ -18,6 +17,7 @@ public:
 
     b2BodyId getBodyId() const { return bodyId; }
     b2Vec2 getPosition() const;
+    b2Vec2 getVelocity() const;
     float getAngle() const;
 
     b2BodyId bodyId = {};

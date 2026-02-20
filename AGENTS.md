@@ -34,20 +34,27 @@ This is not a throwaway prototype. The architecture is designed to be **extensib
 
 ## Build Commands
 
+Build commands are not available for agents.
+
 ### VS Code Tasks
 The following tasks are configured in `.vscode/tasks.json`:
 - `CMake: Configure` - Configure CMake
-- `CMake: Build Client` - Build client executable
-- `CMake: Build Server` - Build server executable
-- `CMake: Build All` - Build all targets
+- `CMake: Build Client (Debug)` - Build client executable (Debug)
+- `CMake: Build Client (Release)` - Build client executable (Release)
+- `CMake: Build Server (Debug)` - Build server executable (Debug)
+- `CMake: Build Server (Release)` - Build server executable (Release)
+- `CMake: Build All (Debug)` - Build all targets (Debug)
+- `CMake: Build All (Release)` - Build all targets (Release)
 
 ### Running the Applications
 ```bash
-# Run client (from build directory)
-./build/client
+# Run client (from project root)
+./build/client/Debug/client.exe   # Debug build
+./build/client/Release/client.exe  # Release build
 
-# Run server (from build directory)
-./build/server
+# Run server (from project root)
+./build/server/Debug/server.exe   # Debug build
+./build/server/Release/server.exe  # Release build
 ```
 
 ## Project Structure
@@ -59,6 +66,9 @@ src/
 thirdparty/
   raylib/     - Graphics library (git submodule)
   box2d/      - Physics library (git submodule)
+  entt/       - Entity component system (git submodule)
+  libdatachannel/ - WebRTC/networking library (git submodule)
+  zpp_bits/   - Binary serialization library (git submodule)
 ```
 
 ## Code Style Guidelines
@@ -118,7 +128,6 @@ Use include guards or `#pragma once` (both are acceptable):
 
 ### Functions
 - Only use `[[nodiscard]]` for functions where ignoring the return value is dangerous
-- Use `[[maybe_unused]]` for intentionally unused parameters
 - Use `noexcept` for move constructors that are guaranteed not to throw
 - Pass large objects by const reference: `const MyType&`
 - Return by value unless moving, forwarding, or returning a reference
@@ -158,6 +167,9 @@ Use include guards or `#pragma once` (both are acceptable):
 ## Dependencies
 - **raylib**: Client-side graphics and window management
 - **box2d**: Physics simulation (C API version, `b2WorldId`, `b2BodyId`, etc.)
+- **entt**: Entity component system
+- **libdatachannel**: WebRTC/networking transport
+- **zpp_bits**: Binary serialization for snapshots and network protocol
 
 ## Testing
 There are no automated tests in the main build.
