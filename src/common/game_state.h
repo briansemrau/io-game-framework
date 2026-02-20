@@ -3,13 +3,14 @@
 
 #include "box2d/box2d.h"
 
-#include <vector>
 #include <memory>
+#include <vector>
 
+#include "ai_system.h"
 #include "car.h"
 
-static constexpr uint32_t fixed_timesteps_per_second = 60;
-static constexpr float fixed_timestep_duration = 1.0f / static_cast<float>(fixed_timesteps_per_second);
+static constexpr uint32_t FixedTimestepsPerSecond = 60;
+static constexpr float FixedTimestepDuration = 1.0f / static_cast<float>(FixedTimestepsPerSecond);
 
 struct Obstacle {
     b2Vec2 position;
@@ -56,13 +57,12 @@ private:
     void createObstacles();
     void createArena();
     void destroyAllCars();
-    void updateAICars();
 
     b2WorldId worldId{};
     Car playerCar;
     std::vector<Car> aiCars;
     std::vector<Obstacle> obstacles;
-    float aiTimer = 0.0f;
+    AISystem aiSystem;
 };
 
 #endif // GAME_STATE_H

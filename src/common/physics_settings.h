@@ -3,8 +3,6 @@
 
 #include <cstdint>
 
-static constexpr float pixelsPerMeter = 64.0f;
-
 enum class CollisionBits : uint64_t {
 	StaticBit = 0x0001,
 	CarBit = 0x0002,

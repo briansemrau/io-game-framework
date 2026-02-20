@@ -73,103 +73,19 @@ thirdparty/
 
 ## Code Style Guidelines
 
-### General
-- C++23 standard is required
-- Prefer modern C++ features (concepts, constexpr, std::format, etc.)
-- This project aims to have a very clean codebase. Architecture and build configuration should be very maintainable and professional.
+As a baseline, use the Google C++ Style Guide (https://google.github.io/styleguide/cppguide.html)
 
-### Naming Conventions
-- **Types** (classes, structs, enums): PascalCase (e.g., `PhysicsSettings`, `CollisionBits`)
-- **Functions**: snake_case (e.g., `init_common`, `step_common`)
-- **Variables**: snake_case (e.g., `worldId`, `throttleInput`)
-- **Constants**: PascalCase with `constexpr` (e.g., `pixelsPerMeter`)
-- **Enum values**: PascalCase (e.g., `StaticBit`, `MoverBit`)
-
-### Formatting
-- Use tabs for indentation
-- Opening braces on same line (K&R style)
-- Max line length: aim for readability, no hard limit
-- Use trailing commas in initializer lists and parameter packs
-- Prefer inline lambdas for simple operations; extract to named functions for complex ones
-
-### Header Organization
-Order includes as follows:
-1. External library headers (e.g., `#include "box2d/box2d.h"`, `#include "raylib.h"`)
-2. Standard library headers (e.g., `#include <vector>`, `#include <format>`)
-3. Project headers (e.g., `#include "physics_settings.h"`)
-
-Use include guards or `#pragma once` (both are acceptable):
-```cpp
-// Option 1: Include guard
-#ifndef FILE_NAME_H
-#define FILE_NAME_H
-// content
-#endif // FILE_NAME_H
-
-// Option 2: Pragma once
-#pragma once
-// content
-```
-
-### Types
-- Use explicit integer types from `<cstdint>` for interop and bit manipulation (e.g., `uint32_t`, `uint64_t`)
-- Use `enum class` for new enums - provides type safety and scoped values
-- Use C-style enums with explicit underlying type only for bitflags:
-  ```cpp
-  enum CollisionBits : uint64_t {
-      StaticBit = 0x0001,
-      DynamicBit = 0x0004,
-  };
-  ```
-- Prefer `constexpr` over `#define` for compile-time constants
-- Use `std::array` or `std::vector` instead of C-style arrays
-- Use `std::string_view` for read-only string parameters (not `const char*`)
-- Use `std::span` for passing arrays or buffer views
-
-### Functions
-- Only use `[[nodiscard]]` for functions where ignoring the return value is dangerous
-- Use `noexcept` for move constructors that are guaranteed not to throw
-- Pass large objects by const reference: `const MyType&`
-- Return by value unless moving, forwarding, or returning a reference
-
-### Classes and Structs
-- Use `struct` for passive data aggregates (C-style POD-like types)
-- Use `class` for types with invariants, encapsulation, or behavior
-- Always initialize member variables - prefer in-class initializers or constructors
-- Make members `private` by default; use `public` for the interface
-- Use `const` member functions where logical state doesn't change
-
-### Error Handling
-- Use assertions (`<cassert>`) for debug-only invariant checking
-- For recoverable errors, prefer returning error codes or using `std::expected` (C++23)
-- Avoid exceptions unless absolutely necessary (this codebase doesn't use them)
-
-### Lambda Expressions
-- Capture by reference `[&]` when appropriate for performance, or by value `[=]` for correctness
-- Specify return type if ambiguous or to aid readability
-- Use for callbacks and STL algorithm customization
-
-### Modern C++ Best Practices
-- Use `constexpr` for any computation that can happen at compile time
-- Prefer `std::make_unique` and `std::make_shared` over raw `new`
-- Use `using` aliases for complex template types:
-  ```cpp
-  using StringVector = std::vector<std::string>;
-  using Callback = std::function<void(int)>;
-  ```
-- Use `auto` for type deduction when the type is obvious from the initializer
-- Avoid unnecessary copies - use const references, move semantics, or `std::move`
-- Use `std::optional` for values that may be absent (instead of sentinel values or pointers)
-
-### Storage
-- Avoid using `static` variables for anything other than managing the running process. Use appropriate objects.
+Our exceptions to the Google style guide include:
+- Use the C++23 standard
+- There is no line length limit
+- Use 4 spaces for indentation
 
 ## Dependencies
 - **raylib**: Client-side graphics and window management
 - **box2d**: Physics simulation (C API version, `b2WorldId`, `b2BodyId`, etc.)
 - **entt**: Entity component system
 - **libdatachannel**: WebRTC/networking transport
-- **zpp_bits**: Binary serialization for snapshots and network protocol
+- **zpp_bits**: Binary serialization for transport
 
 ## Testing
 There are no automated tests in the main build.

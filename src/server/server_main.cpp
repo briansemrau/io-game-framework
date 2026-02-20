@@ -12,6 +12,7 @@ using Seconds = std::chrono::duration<float, std::ratio<1>>;
 
 int main() {
     GameState game_state;
+    game_state.init();
 
     std::deque<Seconds> stepDurationRecord{};
     float timescale = 1.0; // For slowing down under heavy server load
@@ -25,7 +26,7 @@ int main() {
     while (true) {
         // The sands of time
         const auto currentTime = std::chrono::steady_clock::now();
-        const Seconds elapsed = currentTime - previousTime;
+        const Seconds elapsed = std::min(Seconds(2), Seconds(currentTime - previousTime)); // don't handle major time skips
         previousTime = currentTime;
         remainingTime += elapsed;
 
@@ -38,22 +39,22 @@ int main() {
 
         // Do statistics
         stepDurationRecord.push_back(elapsed);
-        if (stepDurationRecord.size() > fixed_timesteps_per_second * 3) {
+        if (stepDurationRecord.size() > FixedTimestepsPerSecond * 3) {
             stepDurationRecord.pop_front();
         }
-        const auto meanStepDuration = std::accumulate(stepDurationRecord.begin(), stepDurationRecord.end(), 0.0f) / static_cast<float>(stepDurationRecord.size());
-        const auto targetTimescale = 0.9f * meanStepDuration / fixed_timestep_duration; // go slower than the mean to catch up
+        const auto meanStepDuration = std::accumulate(stepDurationRecord.begin(), stepDurationRecord.end(), Seconds::zero()).count() / static_cast<float>(stepDurationRecord.size());
+        const auto targetTimescale = 0.9f * meanStepDuration / FixedTimestepDuration; // go slower than the mean to catch up
 
         // Slow down timestep if we're behind
-        if (remainingTime.count() > fixed_timestep_duration) {
+        if (remainingTime.count() > FixedTimestepDuration) {
             // Lerp timescale from 1.0 to target depending on how far behind we are.
             // Using a rolling window average should keep timescale smooth
-            static constexpr auto ramp_time = fixed_timestep_duration * 3;
-            float alpha = std::clamp((remainingTime.count() - fixed_timestep_duration) / ramp_time, 0.0f, 1.0f);
+            static constexpr auto ramp_time = FixedTimestepDuration * 3;
+            float alpha = std::clamp((remainingTime.count() - FixedTimestepDuration) / ramp_time, 0.0f, 1.0f);
             timescale = targetTimescale * alpha + 1.0f * (1.0f - alpha);
         }
 
-        const auto current_timestep = Seconds(fixed_timestep_duration) * timescale;
+        const auto current_timestep = Seconds(FixedTimestepDuration) * timescale;
 
         // Do work
         if (remainingTime >= current_timestep) {

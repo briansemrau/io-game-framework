@@ -85,7 +85,7 @@ int main() {
         
         render_state.handbrake = handbrakeInput;
         
-        carSetInput(playerCar, throttleInput, turnInput, handbrakeInput);
+        playerCar.setInput(throttleInput, turnInput, handbrakeInput);
 
         // TODO this is where we queue input events. they will be handled in the next timestep, and also synchronized with the server.
         // The rollback data will store the most recent server truth (including all other user's input events), and retain all input events across timesteps since that truth state so that they can be replayed in resim.
@@ -94,7 +94,7 @@ int main() {
         // Storing as entity state allows us to reduce bandwidth by implicitly passing it through spatial filtering.
         
         // Do work
-        const auto current_timestep = Seconds(fixed_timestep_duration) * timescale;
+        const auto current_timestep = Seconds(FixedTimestepDuration) * timescale;
         if (remainingTime >= current_timestep) {
             game_state.step();
             remainingTime -= current_timestep;

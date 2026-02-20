@@ -1,9 +1,10 @@
 #include "debug_draw.h"
 
 #include "raylib.h"
-#include "physics_settings.h"
 
 #include <vector>
+
+static constexpr float PixelsPerMeter = 64.0f;
 
 // this c++ function decl syntax scares me
 auto colorConv(b2HexColor color) -> Color {
@@ -11,7 +12,7 @@ auto colorConv(b2HexColor color) -> Color {
 }
 
 auto b2VecToVector2(const b2Vec2& v) -> Vector2 {
-    return Vector2(v.x * pixelsPerMeter, v.y * pixelsPerMeter);
+    return Vector2(v.x * PixelsPerMeter, v.y * PixelsPerMeter);
 }
 
 b2DebugDraw b2RaylibDebugDraw() {
@@ -34,13 +35,13 @@ b2DebugDraw b2RaylibDebugDraw() {
         DrawTriangleFan(v.data(), vertexCount, colorConv(color));
     };
     debugDraw.DrawCircleFcn = [](b2Vec2 center, float radius, b2HexColor color, void*) {
-        DrawCircleLinesV(b2VecToVector2(center), radius * pixelsPerMeter, colorConv(color));
+        DrawCircleLinesV(b2VecToVector2(center), radius * PixelsPerMeter, colorConv(color));
     };
     debugDraw.DrawSolidCircleFcn = [](b2Transform transform, float radius, b2HexColor color, void*) {
-        DrawCircleV(b2VecToVector2(transform.p), radius * pixelsPerMeter, colorConv(color));
+        DrawCircleV(b2VecToVector2(transform.p), radius * PixelsPerMeter, colorConv(color));
     };
     debugDraw.DrawSolidCapsuleFcn = [](b2Vec2 p1, b2Vec2 p2, float radius, b2HexColor color, void*) {
-        const int seg = std::max(4, (int)(radius * pixelsPerMeter * 3));
+        const int seg = std::max(4, (int)(radius * PixelsPerMeter * 3));
         const float step = PI / seg;
         b2Vec2 d = p2 - p1;
         b2Normalize(d);
@@ -80,10 +81,10 @@ b2DebugDraw b2RaylibDebugDraw() {
         DrawLineV(b2VecToVector2(p1), b2VecToVector2(p2), GREEN);
     };
     debugDraw.DrawPointFcn = [](b2Vec2 p, float size, b2HexColor color, void*) {
-        DrawCircleV(b2VecToVector2(p), size * pixelsPerMeter, colorConv(color));
+        DrawCircleV(b2VecToVector2(p), size * PixelsPerMeter, colorConv(color));
     };
     debugDraw.DrawStringFcn = [](b2Vec2 p, const char* s, b2HexColor color, void*) {
-        DrawText(s, p.x * pixelsPerMeter, p.y * pixelsPerMeter, 20, colorConv(color));
+        DrawText(s, p.x * PixelsPerMeter, p.y * PixelsPerMeter, 20, colorConv(color));
     };
     return debugDraw;
 }

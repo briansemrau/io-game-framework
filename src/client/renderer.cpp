@@ -2,6 +2,8 @@
 
 #include "raylib.h"
 
+#include "game_state.h"
+
 #include <cmath>
 #include <format>
 #include <numbers>
@@ -23,8 +25,8 @@ void Renderer::render(const GameState& gameState, const RenderState& renderState
             screenCenter.y + carPos.y * zoom
         };
 
-        float arenaW = 40.0f * zoom;
-        float arenaH = 30.0f * zoom;
+        float arenaW = GameState::ArenaWidth * zoom;
+        float arenaH = GameState::ArenaHeight * zoom;
         
         Rectangle arenaRect = {
             screenCenter.x - arenaW / 2.0f,
@@ -35,14 +37,14 @@ void Renderer::render(const GameState& gameState, const RenderState& renderState
         DrawRectangleLinesEx(arenaRect, 4.0f, {80, 90, 100, 255});
 
         float gridSize = 5.0f;
-        for (float x = -20.0f; x <= 20.0f; x += gridSize) {
-            Vector2 start = {screenCenter.x + x * zoom, screenCenter.y - 15.0f * zoom};
-            Vector2 end = {screenCenter.x + x * zoom, screenCenter.y + 15.0f * zoom};
+        for (float x = GameState::ArenaMinX; x <= GameState::ArenaMaxX; x += gridSize) {
+            Vector2 start = {screenCenter.x + x * zoom, screenCenter.y + GameState::ArenaMinY * zoom};
+            Vector2 end = {screenCenter.x + x * zoom, screenCenter.y + GameState::ArenaMaxY * zoom};
             DrawLineV(start, end, {50, 55, 60, 100});
         }
-        for (float y = -15.0f; y <= 15.0f; y += gridSize) {
-            Vector2 start = {screenCenter.x - 20.0f * zoom, screenCenter.y + y * zoom};
-            Vector2 end = {screenCenter.x + 20.0f * zoom, screenCenter.y + y * zoom};
+        for (float y = GameState::ArenaMinY; y <= GameState::ArenaMaxY; y += gridSize) {
+            Vector2 start = {screenCenter.x + GameState::ArenaMinX * zoom, screenCenter.y + y * zoom};
+            Vector2 end = {screenCenter.x + GameState::ArenaMaxX * zoom, screenCenter.y + y * zoom};
             DrawLineV(start, end, {50, 55, 60, 100});
         }
 
@@ -65,7 +67,7 @@ void Renderer::render(const GameState& gameState, const RenderState& renderState
 
         for (size_t i = 0; i < gameState.getAICars().size(); i++) {
             const auto& aiCar = gameState.getAICars()[i];
-            b2Vec2 aiCarPos = b2Body_GetTransform(aiCar.bodyId).p;
+            b2Vec2 aiCarPos = aiCar.getPosition();
 
             Vector2 aiCarScreenPos = {
                 screenCenter.x + aiCarPos.x * zoom,
@@ -105,11 +107,11 @@ void Renderer::render(const GameState& gameState, const RenderState& renderState
         DrawRectangle((int)miniMapPos.x, (int)miniMapPos.y, (int)miniMapSize, (int)miniMapSize, {20, 25, 30, 150});
         DrawRectangleLines((int)miniMapPos.x, (int)miniMapPos.y, (int)miniMapSize, (int)miniMapSize, {80, 90, 100, 255});
         
-        b2Vec2 playerPos = b2Body_GetTransform(playerCar.bodyId).p;
+        b2Vec2 playerPos = playerCar.getPosition();
         DrawCircleV({miniMapPos.x + miniMapSize/2 + playerPos.x * miniMapScale, miniMapPos.y + miniMapSize/2 + playerPos.y * miniMapScale}, 4.0f, {255, 50, 50, 255});
         
         for (const auto& aiCar : gameState.getAICars()) {
-            b2Vec2 aiPos = b2Body_GetTransform(aiCar.bodyId).p;
+            b2Vec2 aiPos = aiCar.getPosition();
             Vector2 aiMiniPos = {
                 miniMapPos.x + miniMapSize/2 + aiPos.x * miniMapScale,
                 miniMapPos.y + miniMapSize/2 + aiPos.y * miniMapScale
@@ -118,7 +120,8 @@ void Renderer::render(const GameState& gameState, const RenderState& renderState
         }
 
         if (renderState.debugDrawEnabled) {
-            // b2World_DrawWorld(getWorldId(), &debugDraw); // TODO what is the right function?
+            // Debug draw requires passing b2DebugDraw from client_main.cpp
+            // TODO: Implement proper debug draw by passing debugDraw to renderer
         }
     }
     EndDrawing();
@@ -139,8 +142,7 @@ void Renderer::handleMouseWheel(float delta) {
 }
 
 void Renderer::renderCar(const Car& car, Vector2 screenPos, float zoom, Color color) {
-    b2Rot carRot = b2Body_GetTransform(car.bodyId).q;
-    float carAngle = b2Rot_GetAngle(carRot);
+    float carAngle = car.getAngle();
 
     float carScreenW = car.width * zoom;
     float carScreenH = car.height * zoom;
@@ -157,8 +159,7 @@ void Renderer::renderPlayerCar(const Car& car, Vector2 screenPos, float zoom, bo
     Color playerCarColor = handbrake ? Color{255, 150, 50, 255} : Color{200, 60, 60, 255};
     renderCar(car, screenPos, zoom, playerCarColor);
 
-    b2Rot carRot = b2Body_GetTransform(car.bodyId).q;
-    float carAngle = b2Rot_GetAngle(carRot);
+    float carAngle = car.getAngle();
     float carScreenH = car.height * zoom;
 
     Vector2 frontDir = {

@@ -15,7 +15,7 @@ void Car::create(b2WorldId worldId, b2Vec2 position) {
 
     bodyId = b2CreateBody(worldId, &bodyDef);
 
-    b2Polygon polygon = b2MakeBox(width / 2.0f, height / 2.0f);
+    b2Polygon polygon = b2MakeBox(Width / 2.0f, Height / 2.0f);
     b2ShapeDef shapeDef = b2DefaultShapeDef();
     shapeDef.density = 1.0f;
     b2SurfaceMaterial material = b2DefaultSurfaceMaterial();
@@ -48,14 +48,14 @@ void Car::update(float deltaTime) {
 
     float forwardSpeed = b2Dot(velocity, b2RotateVector(transform.q, {0.0f, 1.0f}));
 
-    float throttleForce = throttleInput * acceleration;
+    float throttleForce = throttleInput * Acceleration;
     b2Vec2 forwardDir = b2RotateVector(transform.q, {0.0f, 1.0f});
     b2Vec2 force = b2MulSV(throttleForce, forwardDir);
     b2Body_ApplyForceToCenter(bodyId, force, true);
 
     if (std::abs(forwardSpeed) > 0.5f) {
         float turnDirection = forwardSpeed > 0.0f ? 1.0f : -1.0f;
-        float turnAmount = turnInput * turnSpeed * turnDirection;
+        float turnAmount = turnInput * TurnSpeed * turnDirection;
         
         if (handbrakeInput) {
             turnAmount *= 1.5f;
@@ -65,7 +65,7 @@ void Car::update(float deltaTime) {
     }
 
     b2Vec2 newVelocity = b2Body_GetLinearVelocity(bodyId);
-    float lateralFriction = handbrakeInput ? 0.98f : driftFactor;
+    float lateralFriction = handbrakeInput ? Friction : DriftFactor;
     b2Vec2 rightDir = b2RotateVector(transform.q, {1.0f, 0.0f});
     float lateralVelocity = b2Dot(newVelocity, rightDir);
     b2Vec2 lateralImpulse = b2MulSV(-lateralVelocity * lateralFriction, rightDir);
@@ -73,8 +73,8 @@ void Car::update(float deltaTime) {
 
     b2Vec2 forwardDir2 = b2RotateVector(transform.q, {0.0f, 1.0f});
     float currentForwardSpeed = b2Dot(newVelocity, forwardDir2);
-    if (std::abs(currentForwardSpeed) > maxSpeed) {
-        float excessSpeed = currentForwardSpeed - (currentForwardSpeed > 0 ? maxSpeed : -maxSpeed);
+    if (std::abs(currentForwardSpeed) > MaxSpeed) {
+        float excessSpeed = currentForwardSpeed - (currentForwardSpeed > 0 ? MaxSpeed : -MaxSpeed);
         b2Vec2 excessImpulse = b2MulSV(-excessSpeed * 0.5f, forwardDir2);
         b2Body_ApplyLinearImpulseToCenter(bodyId, excessImpulse, true);
     }
@@ -90,8 +90,4 @@ b2Vec2 Car::getVelocity() const {
 
 float Car::getAngle() const {
     return b2Rot_GetAngle(b2Body_GetTransform(bodyId).q);
-}
-
-void carSetInput(Car& car, float throttle, float turn, bool handbrake) {
-    car.setInput(throttle, turn, handbrake);
 }

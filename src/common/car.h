@@ -8,6 +8,15 @@
 
 class Car {
 public:
+    static constexpr float Acceleration = 20.0f;
+    static constexpr float TurnSpeed = 3.5f;
+    static constexpr float Friction = 0.98f;
+    static constexpr float DriftFactor = 0.95f;
+    static constexpr float MaxSpeed = 15.0f;
+    static constexpr float Width = 1.5f;
+    static constexpr float Height = 2.5f;
+    static constexpr float Health = 100.0f;
+
     Car() = default;
 
     void create(b2WorldId worldId, b2Vec2 position);
@@ -20,7 +29,10 @@ public:
     b2Vec2 getVelocity() const;
     float getAngle() const;
 
+private:
     b2BodyId bodyId = {};
+
+public:
     float width = 1.5f;
     float height = 2.5f;
     float maxSpeed = 15.0f;
@@ -35,7 +47,5 @@ public:
     float turnInput = 0.0f;
     bool handbrakeInput = false;
 };
-
-void carSetInput(Car& car, float throttle, float turn, bool handbrake);
 
 #endif // CAR_H

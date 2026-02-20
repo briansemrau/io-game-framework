@@ -52,7 +52,7 @@ void GameState::reset() {
 void GameState::step() {
     const float deltaTime = FixedTimestepDuration;
     playerCar.update(deltaTime);
-    updateAICars();
+    aiSystem.update(playerCar, aiCars, deltaTime);
     b2World_Step(worldId, deltaTime, 4);
 }
 
@@ -127,44 +127,4 @@ void GameState::createArena() {
     createArenaWall({0.0f, min.y - wallThickness}, {max.x + wallThickness, wallThickness});
     createArenaWall({max.x + wallThickness, 0.0f}, {wallThickness, max.y + wallThickness});
     createArenaWall({min.x - wallThickness, 0.0f}, {wallThickness, max.y + wallThickness});
-}
-
-void GameState::updateAICars() {
-    aiTimer += FixedTimestepDuration;
-    
-    const b2Vec2 playerPos = playerCar.getPosition();
-    
-    int index = 0;
-    for (auto& aiCar : aiCars) {
-        const b2Vec2 carPos = aiCar.getPosition();
-        
-        const float followPlayer = (index % 2 == 0) ? 0.7f : 0.0f;
-        float targetX;
-        float targetY;
-        
-        if (followPlayer > 0.0f) {
-            targetX = playerPos.x + std::sinf(aiTimer * 0.5f + static_cast<float>(index) * 1.5f) * 3.0f;
-            targetY = playerPos.y + std::cosf(aiTimer * 0.3f + static_cast<float>(index) * 1.5f) * 3.0f;
-        } else {
-            targetX = carPos.x + std::sinf(aiTimer * 0.5f + static_cast<float>(index)) * 8.0f;
-            targetY = carPos.y + std::cosf(aiTimer * 0.3f + static_cast<float>(index)) * 8.0f;
-        }
-        
-        b2Vec2 toTarget = {targetX - carPos.x, targetY - carPos.y};
-        const float targetAngle = std::atan2f(toTarget.x, toTarget.y);
-        
-        const float currentAngle = aiCar.getAngle();
-        
-        float angleDiff = targetAngle - currentAngle;
-        while (angleDiff > std::numbers::pi) angleDiff -= 2.0f * std::numbers::pi;
-        while (angleDiff < -std::numbers::pi) angleDiff += 2.0f * std::numbers::pi;
-        
-        float turnInput = angleDiff * 2.0f;
-        if (turnInput > 1.0f) turnInput = 1.0f;
-        if (turnInput < -1.0f) turnInput = -1.0f;
-        
-        const float throttleInput = 0.6f + followPlayer * 0.3f;
-        aiCar.setInput(throttleInput, turnInput, false);
-        index++;
-    }
 }
