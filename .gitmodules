@@ -4,3 +4,12 @@
 [submodule "thirdparty/box2d"]
 	path = thirdparty/box2d
 	url = https://github.com/erincatto/box2d
+[submodule "thirdparty/entt"]
+	path = thirdparty/entt
+	url = https://github.com/skypjack/entt.git
+[submodule "thirdparty/libdatachannel"]
+	path = thirdparty/libdatachannel
+	url = https://github.com/paullouisageneau/libdatachannel.git
+[submodule "thirdparty/zpp_bits"]
+	path = thirdparty/zpp_bits
+	url = https://github.com/eyalz800/zpp_bits.git
