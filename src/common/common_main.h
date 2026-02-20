@@ -5,6 +5,9 @@
 #include "car.h"
 #include <vector>
 
+static constexpr uint32_t fixed_timesteps_per_second = 60;
+static constexpr float fixed_timestep_duration = 1.0f / static_cast<float>(fixed_timesteps_per_second);
+
 struct Obstacle
 {
     b2Vec2 position;
