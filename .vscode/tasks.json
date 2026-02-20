@@ -3,6 +3,9 @@
     "tasks": [
         {
             "label": "CMake: Configure",
+            "presentation": {
+                "reveal": "silent"
+            },
             "type": "shell",
             "command": "cmake",
             "args": [
@@ -15,96 +18,96 @@
             "group": "none"
         },
         {
-            "label": "CMake: Build Client (Debug)",
+            "label": "CMake: Build (preset)",
             "type": "shell",
             "command": "cmake",
             "args": [
                 "--build",
-                "./out/build",
-                "--target",
-                "client",
-                "--config",
-                "Debug"
+                "--preset",
+                "${input:buildPreset}"
+            ],
+            "group": "build",
+            "problemMatcher": ["$gcc"],
+            "presentation": { "reveal": "silent" }
+        },
+        {
+            "label": "CMake: Build Client (Debug)",
+            "presentation": {
+                "reveal": "silent"
+            },
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "--preset",
+                "client-debug"
             ],
             "problemMatcher": ["$gcc"],
             "group": "build",
-            "dependsOn": ["CMake: Configure"]
+            // "dependsOn": ["CMake: Configure"]
         },
         {
             "label": "CMake: Build Client (Release)",
+            "presentation": {
+                "reveal": "silent"
+            },
             "type": "shell",
             "command": "cmake",
             "args": [
                 "--build",
-                "./out/build",
-                "--target",
-                "client",
-                "--config",
-                "Release"
+                "--preset",
+                "client-release"
             ],
             "problemMatcher": ["$gcc"],
             "group": "build",
-            "dependsOn": ["CMake: Configure"]
+            // "dependsOn": ["CMake: Configure"]
         },
         {
             "label": "CMake: Build Server (Debug)",
+            "presentation": {
+                "reveal": "silent"
+            },
             "type": "shell",
             "command": "cmake",
             "args": [
                 "--build",
-                "./out/build",
-                "--target",
-                "server",
-                "--config",
-                "Debug"
+                "--preset",
+                "server-debug"
             ],
             "problemMatcher": ["$gcc"],
             "group": "build",
-            "dependsOn": ["CMake: Configure"]
+            // "dependsOn": ["CMake: Configure"]
         },
         {
             "label": "CMake: Build Server (Release)",
+            "presentation": {
+                "reveal": "silent"
+            },
             "type": "shell",
             "command": "cmake",
             "args": [
                 "--build",
-                "./out/build",
-                "--target",
-                "server",
-                "--config",
-                "Release"
+                "--preset",
+                "server-release"
             ],
             "problemMatcher": ["$gcc"],
             "group": "build",
             "dependsOn": ["CMake: Configure"]
         },
+    ],
+    "inputs": [
         {
-            "label": "CMake: Build All (Debug)",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "./out/build",
-                "--config",
-                "Debug"
+            "id": "buildPreset",
+            "type": "pickString",
+            "options": [
+                "client-debug",
+                "client-release",
+                "server-debug",
+                "server-release",
+                "client-asan",
+                "server-asan"
             ],
-            "problemMatcher": ["$gcc"],
-            "group": "build",
-            "dependsOn": ["CMake: Configure"]
-        },
-        {
-            "label": "CMake: Build All (Release)",
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "./out/build",
-                "--config",
-                "Release"
-            ],
-            "problemMatcher": ["$gcc"],
-            "group": "build",
-            "dependsOn": ["CMake: Configure"]
+            "default": "client-debug"
         }
     ]
 }

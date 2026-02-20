@@ -20,6 +20,14 @@ elseif(MSVC)
     list(APPEND COMPILE_OPTIONS /W4 /permissive-)
 endif()
 
+# ASan
+option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
+
+if(ENABLE_ASAN)
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
+
 # Shared sources
 file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS src/common/*.cpp)
 

@@ -1,33 +1,114 @@
 {
-    "version": 8,
-    "cmakeMinimumRequired": {
-        "major": 3,
-        "minor": 21,
-        "patch": 0
-    },
-    "configurePresets": [
-        {
-            "name": "windows-only",
-            "displayName": "Windows-only configuration",
-            "description": "This build is only available on Windows",
-            "cmakeExecutable": "C:/Program Files/CMake/bin/cmake.exe",
-            "binaryDir": "${sourceDir}/out/build/${presetName}",
-            "hidden": true,
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Windows"
-            }
-        },
-        {
-            "name": "win32-clang20_1_8-x64-ninja-multi",
-            "displayName": "Windows Clang 20.1.8 amd64 MSVC18 (Ninja Multi-Config)",
-            "generator": "Ninja Multi-Config",
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
-                "CMAKE_C_COMPILER": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang.exe",
-                "CMAKE_CXX_COMPILER": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang.exe"
-            }
-        }
-    ]
+	"version": 8,
+	"cmakeMinimumRequired": {
+		"major": 3,
+		"minor": 21,
+		"patch": 0
+	},
+	"configurePresets": [
+		{
+			"name": "base",
+			"hidden": true,
+			"cacheVariables": {
+				"CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
+			}
+		},
+		{
+			"name": "windows",
+			"hidden": true,
+			"inherits": "base",
+			"cmakeExecutable": "C:/Program Files/CMake/bin/cmake.exe",
+			"cacheVariables": {
+				"CMAKE_RC_COMPILER": "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/rc.exe"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Windows"
+			}
+		},
+		{
+			"name": "clang",
+			"hidden": true,
+			"inherits": "windows",
+			"generator": "Ninja Multi-Config",
+			"binaryDir": "${sourceDir}/out/build/clang",
+			"cacheVariables": {
+				"CMAKE_C_COMPILER": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang.exe",
+				"CMAKE_CXX_COMPILER": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang.exe"
+			}
+		},
+		{
+			"name": "debug",
+			"displayName": "Debug",
+			"inherits": "clang"
+		},
+		{
+			"name": "release",
+			"displayName": "Release",
+			"inherits": "clang"
+		},
+		{
+			"name": "asan",
+			"displayName": "ASan Debug",
+			"inherits": "windows",
+			"generator": "Ninja Multi-Config",
+			"binaryDir": "${sourceDir}/out/build/asan",
+			"cacheVariables": {
+				"CMAKE_C_COMPILER": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang.exe",
+				"CMAKE_CXX_COMPILER": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang.exe",
+				"ENABLE_ASAN": "ON"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "client-debug",
+			"configurePreset": "debug",
+			"targets": [
+				"client"
+			],
+			"configuration": "Debug"
+		},
+		{
+			"name": "client-release",
+			"configurePreset": "release",
+			"targets": [
+				"client"
+			],
+			"configuration": "Release"
+		},
+		{
+			"name": "server-debug",
+			"configurePreset": "debug",
+			"targets": [
+				"server"
+			],
+			"configuration": "Debug"
+		},
+		{
+			"name": "server-release",
+			"configurePreset": "release",
+			"targets": [
+				"server"
+			],
+			"configuration": "Release"
+		},
+		{
+			"name": "client-asan",
+			"configurePreset": "asan",
+			"targets": [
+				"client"
+			],
+			"configuration": "Debug"
+		},
+		{
+			"name": "server-asan",
+			"configurePreset": "asan",
+			"targets": [
+				"server"
+			],
+			"configuration": "Debug"
+		}
+	]
 }
