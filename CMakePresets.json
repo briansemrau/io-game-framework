@@ -1,12 +1,28 @@
 {
     "version": 8,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
     "configurePresets": [
         {
-            "name": "Clang-Ninja",
-            "displayName": "Clang with Ninja Multi-Config",
-            "description": "Using Clang with Ninja Multi-Config generator",
+            "name": "windows-only",
+            "displayName": "Windows-only configuration",
+            "description": "This build is only available on Windows",
+            "cmakeExecutable": "C:/Program Files/CMake/bin/cmake.exe",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "hidden": true,
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+        },
+        {
+            "name": "win32-clang20_1_8-x64-ninja-multi",
+            "displayName": "Windows Clang 20.1.8 amd64 MSVC18 (Ninja Multi-Config)",
             "generator": "Ninja Multi-Config",
-            "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
                 "CMAKE_C_COMPILER": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang.exe",

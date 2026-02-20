@@ -1,56 +1,91 @@
 cmake_minimum_required(VERSION 3.25)
-project(destruction_derby CXX)
+project(destruction_derby LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Global settings
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Dependencies
 add_subdirectory(thirdparty/raylib)
 add_subdirectory(thirdparty/box2d)
 
-include_directories(
+# Compiler warnings
+set(COMPILE_OPTIONS "")
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    list(APPEND COMPILE_OPTIONS -Wall -Wextra -Wpedantic)
+elseif(MSVC)
+    list(APPEND COMPILE_OPTIONS /W4 /permissive-)
+endif()
+
+# Shared sources
+file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS src/common/*.cpp)
+
+# Shared interface target (includes + common sources)
+add_library(common STATIC ${COMMON_SOURCES})
+
+target_link_libraries(common PUBLIC box2d)
+
+target_include_directories(common PUBLIC
     ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/src/client
     ${CMAKE_SOURCE_DIR}/src/common
 )
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(COMPILE_OPTIONS -Wall -Wextra -pedantic)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    set(COMPILE_OPTIONS /W4 /permissive-)
+target_compile_options(common PRIVATE ${COMPILE_OPTIONS})
+
+# Client
+file(GLOB_RECURSE CLIENT_SOURCES CONFIGURE_DEPENDS src/client/*.cpp)
+
+add_executable(client ${CLIENT_SOURCES})
+
+target_link_libraries(client PRIVATE common raylib)
+
+target_include_directories(client PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/client
+)
+
+target_compile_options(client PRIVATE ${COMPILE_OPTIONS})
+
+set_target_properties(client PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/client/$<CONFIG>
+)
+
+if(APPLE)
+    target_link_libraries(client PRIVATE
+        "-framework IOKit"
+        "-framework Cocoa"
+        "-framework OpenGL"
+    )
 endif()
 
-function(add_client_executable TARGET)
-    add_executable(${TARGET} ${ARGN})
-    set_target_properties(${TARGET} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/client/$<CONFIG>
+if(PLATFORM STREQUAL "Web")
+    set_target_properties(client PROPERTIES SUFFIX ".html")
+
+    target_link_options(client PRIVATE
+        "-sUSE_GLFW=3"
+        "--preload-file resources"
+        "-sWASM=1"
+        "-sASYNCIFY"
+        "-sALLOW_MEMORY_GROWTH=1"
+        "--shell-file=${CMAKE_SOURCE_DIR}/src/client/minshell.html"
     )
-    target_link_libraries(${TARGET} PRIVATE raylib box2d)
-    target_compile_options(${TARGET} PRIVATE ${COMPILE_OPTIONS})
-    if (APPLE)
-        target_link_libraries(${TARGET} PRIVATE "-framework IOKit" "-framework Cocoa" "-framework OpenGL")
-    endif()
-    if ("${PLATFORM}" STREQUAL "Web")
-        set_target_properties(${TARGET} PROPERTIES SUFFIX ".html")
-        target_link_options(${TARGET} PROPERTIES LINK_FLAGS "-sUSE_GLFW=3 --preload-file resources -sWASM=1 -sASYNCIFY -sALLOW_MEMORY_GROWTH=1 --shell-file ${CMAKE_SOURCE_DIR}/src/client/minshell.html")
-    endif()
-endfunction()
+endif()
 
-function(add_server_executable TARGET)
-    add_executable(${TARGET} ${ARGN})
-    set_target_properties(${TARGET} PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/server/$<CONFIG>
-    )
-    target_link_libraries(${TARGET} PRIVATE box2d)
-    target_compile_options(${TARGET} PRIVATE ${COMPILE_OPTIONS})
-endfunction()
+# Server
+file(GLOB_RECURSE SERVER_SOURCES CONFIGURE_DEPENDS src/server/*.cpp)
 
-file(GLOB_RECURSE CLIENT_SOURCES "${CMAKE_SOURCE_DIR}/src/client/*.cpp")
-file(GLOB_RECURSE COMMON_SOURCES "${CMAKE_SOURCE_DIR}/src/common/*.cpp")
+add_executable(server ${SERVER_SOURCES})
 
-add_client_executable(client ${CLIENT_SOURCES} ${COMMON_SOURCES})
+target_link_libraries(server PRIVATE common)
 
-file(GLOB_RECURSE SERVER_SOURCES "${CMAKE_SOURCE_DIR}/src/server/*.cpp")
-add_server_executable(server ${SERVER_SOURCES} ${COMMON_SOURCES})
+target_include_directories(server PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/server
+)
+
+target_compile_options(server PRIVATE ${COMPILE_OPTIONS})
+
+set_target_properties(server PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/server/$<CONFIG>
+)
