@@ -19,6 +19,9 @@
         },
         {
             "label": "CMake: Build (preset)",
+            "presentation": {
+                "reveal": "silent"
+            },
             "type": "shell",
             "command": "cmake",
             "args": [
@@ -27,8 +30,12 @@
                 "${input:buildPreset}"
             ],
             "group": "build",
-            "problemMatcher": ["$gcc"],
-            "presentation": { "reveal": "silent" }
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "dependsOn": [
+                "CMake: Configure"
+            ]
         },
         {
             "label": "CMake: Build Client (Debug)",
@@ -42,9 +49,13 @@
                 "--preset",
                 "client-debug"
             ],
-            "problemMatcher": ["$gcc"],
+            "problemMatcher": [
+                "$gcc"
+            ],
             "group": "build",
-            // "dependsOn": ["CMake: Configure"]
+            "dependsOn": [
+                "CMake: Configure"
+            ]
         },
         {
             "label": "CMake: Build Client (Release)",
@@ -58,9 +69,13 @@
                 "--preset",
                 "client-release"
             ],
-            "problemMatcher": ["$gcc"],
+            "problemMatcher": [
+                "$gcc"
+            ],
             "group": "build",
-            // "dependsOn": ["CMake: Configure"]
+            "dependsOn": [
+                "CMake: Configure"
+            ]
         },
         {
             "label": "CMake: Build Server (Debug)",
@@ -74,9 +89,13 @@
                 "--preset",
                 "server-debug"
             ],
-            "problemMatcher": ["$gcc"],
+            "problemMatcher": [
+                "$gcc"
+            ],
             "group": "build",
-            // "dependsOn": ["CMake: Configure"]
+            "dependsOn": [
+                "CMake: Configure"
+            ]
         },
         {
             "label": "CMake: Build Server (Release)",
@@ -90,9 +109,13 @@
                 "--preset",
                 "server-release"
             ],
-            "problemMatcher": ["$gcc"],
+            "problemMatcher": [
+                "$gcc"
+            ],
             "group": "build",
-            "dependsOn": ["CMake: Configure"]
+            "dependsOn": [
+                "CMake: Configure"
+            ]
         },
     ],
     "inputs": [

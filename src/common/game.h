@@ -5,12 +5,39 @@
 #include <vector>
 
 #include "box2d/box2d.h"
-#include "car.h"
+
+using id_t = uint64_t;
 
 static constexpr uint32_t FixedTimestepsPerSecond = 60;
 static constexpr float FixedTimestepDuration = 1.0f / static_cast<float>(FixedTimestepsPerSecond);
 
 class GameState {
+public:
+    GameState();
+
+    GameState(const GameState &);
+    GameState(GameState &&) noexcept;
+    GameState &operator=(const GameState &);
+    GameState &operator=(GameState &&) noexcept;
+    virtual ~GameState();
+
+    uint64_t tickCount{};
+    uint32_t server_subobject_id_counter{1};
+
+    uint32_t testData{};
+
+    b2WorldId worldId{};
+
+    constexpr static auto serialize(auto &archive, auto &self) {
+        return archive(
+            self.tickCount,
+            self.server_subobject_id_counter,
+            self.testData,
+        );
+    }
+};
+
+class Game {
 public:
     static constexpr uint32_t FixedTimestepsPerSecond = 60;
     static constexpr float FixedTimestepDuration = 1.0f / static_cast<float>(FixedTimestepsPerSecond);
@@ -22,23 +49,24 @@ public:
     static constexpr float ArenaMaxX = ArenaWidth / 2.0f;
     static constexpr float ArenaMaxY = ArenaHeight / 2.0f;
 
-    GameState();
-    virtual ~GameState();
-    GameState(const GameState &);
-    GameState(const GameState &&) noexcept;
-    GameState &operator=(const GameState &);
-    GameState &operator=(const GameState &&) noexcept;
+    Game();
+    Game(const Game &) = delete;
+    Game(Game &&) noexcept = delete;
+    Game &operator=(const Game &) = delete;
+    Game &operator=(Game &&) noexcept = delete;
+    virtual ~Game();
 
-    void reset();
     void step();
 
-    b2WorldId getWorldId() const { return worldId; }
+    void setState(GameState &);
+    const GameState &getState() const;
 
 private:
     void createArenaWall(b2Vec2 center, b2Vec2 halfSize);
     void createArena();
 
-    b2WorldId worldId{};
+    bool m_isServer{};
+    GameState m_state{};
 };
 
 #endif  // GAME_STATE_H

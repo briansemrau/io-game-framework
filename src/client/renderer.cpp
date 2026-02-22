@@ -4,7 +4,7 @@
 #include <format>
 #include <numbers>
 
-#include "game_state.h"
+#include "game.h"
 #include "raylib.h"
 
 void Renderer::render(const GameState& gameState, const RenderState& renderState) {

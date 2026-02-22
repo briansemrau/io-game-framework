@@ -11,6 +11,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Dependencies
 add_subdirectory(thirdparty/raylib)
 add_subdirectory(thirdparty/box2d)
+add_subdirectory(thirdparty/entt)
+add_subdirectory(thirdparty/libdatachannel)
 
 # Compiler warnings
 set(COMPILE_OPTIONS "")
@@ -35,6 +37,9 @@ file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS src/common/*.cpp)
 add_library(common STATIC ${COMMON_SOURCES})
 
 target_link_libraries(common PUBLIC box2d)
+
+# Header-only dependencies
+target_include_directories(common PUBLIC thirdparty/zpp_bits/zpp_bits.h)
 
 target_include_directories(common PUBLIC
     ${CMAKE_SOURCE_DIR}/src

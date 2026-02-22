@@ -1,7 +1,7 @@
 #ifndef CLIENT_INSTANCE_H
 #define CLIENT_INSTANCE_H
 
-#include "game_state.h"
+#include "game.h"
 #include "network_client.h"
 #include "renderer.h"
 

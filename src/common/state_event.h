@@ -1,0 +1,6 @@
+
+class StateEvent {
+public:
+
+private:
+};

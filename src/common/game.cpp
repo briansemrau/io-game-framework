@@ -1,4 +1,4 @@
-#include "game_state.h"
+#include "game.h"
 
 #include <cmath>
 #include <numbers>
@@ -10,18 +10,14 @@ GameState::GameState() {
     b2WorldDef worldDef = b2DefaultWorldDef();
     worldDef.gravity = {0.0f, 0.0f};
     worldId = b2CreateWorld(&worldDef);
-
-    createArena();
-
-    // TODO slot/signals
-    b2World_SetPreSolveCallback(worldId, [](b2ShapeId shapeIdA, b2ShapeId shapeIdB, b2Vec2 point, b2Vec2 normal, void *) -> bool { return true; }, nullptr);
 }
 
-GameState::GameState(const GameState &other) : worldId{other.worldId} {
+GameState::GameState(const GameState &other) : tickCount{other.tickCount}, server_subobject_id_counter{other.server_subobject_id_counter}, testData{other.testData} {
     // TODO: Properly clone world state if needed for rollback
+    // worldId = ...;
 }
 
-GameState::GameState(const GameState &&other) noexcept : worldId{std::exchange(other.worldId, {})} {}
+GameState::GameState(GameState &&other) noexcept : worldId{std::exchange(other.worldId, {})} {}
 
 GameState &GameState::operator=(const GameState &other) {
     if (this != &other) {
@@ -31,7 +27,7 @@ GameState &GameState::operator=(const GameState &other) {
     // TODO: Properly clone world state if needed for rollback
 }
 
-GameState &GameState::operator=(const GameState &&other) noexcept {
+GameState &GameState::operator=(GameState &&other) noexcept {
     if (this != &other) {
         worldId = std::exchange(other.worldId, {});
     }
@@ -45,19 +41,25 @@ GameState::~GameState() {
     worldId = {};
 }
 
-void GameState::reset() {}
-
-void GameState::step() {
+void Game::step() {
     const float deltaTime = FixedTimestepDuration;
-    b2World_Step(worldId, deltaTime, 4);
+    b2World_Step(m_state.worldId, deltaTime, 4);
 }
 
-void GameState::createArenaWall(b2Vec2 center, b2Vec2 halfSize) {
+void Game::setState(GameState &p_state) {
+    m_state = p_state;
+}
+
+const GameState &Game::getState() const {
+    return m_state;
+}
+
+void Game::createArenaWall(b2Vec2 center, b2Vec2 halfSize) {
     b2BodyDef bodyDef = b2DefaultBodyDef();
     bodyDef.type = b2_staticBody;
     bodyDef.position = center;
     bodyDef.rotation = b2MakeRot(0.0f);
-    b2BodyId wallId = b2CreateBody(worldId, &bodyDef);
+    b2BodyId wallId = b2CreateBody(m_state.worldId, &bodyDef);
 
     b2Polygon polygon = b2MakeBox(halfSize.x, halfSize.y);
     b2ShapeDef shapeDef = b2DefaultShapeDef();
@@ -71,7 +73,7 @@ void GameState::createArenaWall(b2Vec2 center, b2Vec2 halfSize) {
     b2CreatePolygonShape(wallId, &shapeDef, &polygon);
 }
 
-void GameState::createArena() {
+void Game::createArena() {
     const float wallThickness = 1.0f;
     const b2Vec2 min{ArenaMinX, ArenaMinY};
     const b2Vec2 max{ArenaMaxX, ArenaMaxY};
@@ -81,3 +83,12 @@ void GameState::createArena() {
     createArenaWall({max.x + wallThickness, 0.0f}, {wallThickness, max.y + wallThickness});
     createArenaWall({min.x - wallThickness, 0.0f}, {wallThickness, max.y + wallThickness});
 }
+
+Game::Game() {
+    createArena();
+
+    // TODO slot/signals
+    b2World_SetPreSolveCallback(m_state.worldId, [](b2ShapeId shapeIdA, b2ShapeId shapeIdB, b2Vec2 point, b2Vec2 normal, void *) -> bool { return true; }, nullptr);
+}
+
+Game::~Game() {}

@@ -5,6 +5,11 @@ CompileFlags:
     - -I
     - thirdparty/raylib/src
     - -I
+    - thirdparty/libdatachannel/include
+    - -I
+    - thirdparty/entt/src
+    - -I
+    - thirdparty/zpp_bits
     - src
     - -std=c++23
 

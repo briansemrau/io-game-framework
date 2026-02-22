@@ -3,7 +3,7 @@
 
 #include "raylib.h"
 
-#include "game_state.h"
+#include "game.h"
 
 // Data specific to the current window
 // (we do not handle multiple cameras)
