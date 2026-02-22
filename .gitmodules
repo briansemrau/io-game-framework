@@ -13,3 +13,6 @@
 [submodule "thirdparty/zpp_bits"]
 	path = thirdparty/zpp_bits
 	url = https://github.com/eyalz800/zpp_bits.git
+[submodule "thirdparty/datachannel-wasm"]
+	path = thirdparty/datachannel-wasm
+	url = https://github.com/paullouisageneau/datachannel-wasm.git
