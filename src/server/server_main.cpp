@@ -11,8 +11,7 @@
 using Seconds = std::chrono::duration<float, std::ratio<1>>;
 
 int main() {
-    GameState game_state;
-    game_state.init();
+    Game game;
 
     std::deque<Seconds> stepDurationRecord{};
     float timescale = 1.0; // For slowing down under heavy server load
@@ -58,7 +57,7 @@ int main() {
 
         // Do work
         if (remainingTime >= current_timestep) {
-            game_state.step();
+            game.step();
             remainingTime -= current_timestep;
         }
 

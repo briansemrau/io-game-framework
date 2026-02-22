@@ -8,11 +8,27 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Dependencies
-add_subdirectory(thirdparty/raylib)
+# Dependencies - platform-agnostic
 add_subdirectory(thirdparty/box2d)
 add_subdirectory(thirdparty/entt)
-add_subdirectory(thirdparty/libdatachannel)
+add_subdirectory(thirdparty/raylib)
+
+# Networking - platform-specific
+if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    add_subdirectory(thirdparty/datachannel-wasm)
+else()
+    set(NO_MEDIA ON CACHE BOOL "Disable media transport support" FORCE)
+    add_subdirectory(thirdparty/libdatachannel)
+endif()
+
+# Transport abstraction layer
+add_library(transport INTERFACE)
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    target_link_libraries(transport INTERFACE datachannel-wasm)
+else()
+    target_link_libraries(transport INTERFACE datachannel)
+endif()
 
 # Compiler warnings
 set(COMPILE_OPTIONS "")
@@ -26,21 +42,21 @@ endif()
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
 if(ENABLE_ASAN)
-    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+        add_link_options(-fsanitize=address)
+    elseif(MSVC)
+        add_compile_options(/fsanitize=address)
+    endif()
 endif()
 
 # Shared sources
 file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS src/common/*.cpp)
 
-# Shared interface target (includes + common sources)
 add_library(common STATIC ${COMMON_SOURCES})
 
-target_link_libraries(common PUBLIC box2d)
-
-# Header-only dependencies
-target_include_directories(common PUBLIC thirdparty/zpp_bits/zpp_bits.h)
-
+target_link_libraries(common PUBLIC box2d transport)
+target_include_directories(common PUBLIC thirdparty/zpp_bits)
 target_include_directories(common PUBLIC
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/common
@@ -65,24 +81,21 @@ set_target_properties(client PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/client/$<CONFIG>
 )
 
-if(APPLE)
+if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    set_target_properties(${target} PROPERTIES SUFFIX ".html")
+    target_link_options(${target} PRIVATE
+        "-sUSE_GLFW=3"
+        "-sWASM=1"
+        "-sASYNCIFY"
+        "-sALLOW_MEMORY_GROWTH=1"
+        "--preload-file resources"
+        "--shell-file=${CMAKE_SOURCE_DIR}/src/client/minshell.html"
+    )
+elseif(APPLE)
     target_link_libraries(client PRIVATE
         "-framework IOKit"
         "-framework Cocoa"
         "-framework OpenGL"
-    )
-endif()
-
-if(PLATFORM STREQUAL "Web")
-    set_target_properties(client PROPERTIES SUFFIX ".html")
-
-    target_link_options(client PRIVATE
-        "-sUSE_GLFW=3"
-        "--preload-file resources"
-        "-sWASM=1"
-        "-sASYNCIFY"
-        "-sALLOW_MEMORY_GROWTH=1"
-        "--shell-file=${CMAKE_SOURCE_DIR}/src/client/minshell.html"
     )
 endif()
 

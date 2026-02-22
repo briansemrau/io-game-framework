@@ -10,7 +10,7 @@ public:
     void run();
 
 private:
-    GameState m_gameState;
+    Game m_game;
     NetworkClient m_networkClient;
     Renderer m_renderer;
     RenderState m_renderState;

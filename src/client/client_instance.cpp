@@ -82,14 +82,13 @@ void ClientInstance::handleInput() {
     if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) turnInput += 1.0f;
     if (IsKeyDown(KEY_SPACE)) handbrakeInput = true;
 
-    if (IsKeyPressed(KEY_R)) m_gameState.reset();
     if (IsKeyPressed(KEY_G)) m_renderState.debugDrawEnabled = !m_renderState.debugDrawEnabled;
 
     // m_gameState.getPlayerCar().setInput(throttleInput, turnInput, handbrakeInput);
 }
 
-void ClientInstance::step() { m_gameState.step(); }
+void ClientInstance::step() { m_game.step(); }
 
 void ClientInstance::render() {
-    m_renderer.render(m_gameState, m_renderState);
+    m_renderer.render(m_game.getState(), m_renderState);
 }

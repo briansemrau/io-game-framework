@@ -16,21 +16,21 @@ void Renderer::render(const GameState& gameState, const RenderState& renderState
 
         Vector2 screenCenter = {(float)GetScreenWidth() / 2.0f, (float)GetScreenHeight() / 2.0f};
 
-        float arenaW = GameState::ArenaWidth * zoom;
-        float arenaH = GameState::ArenaHeight * zoom;
+        float arenaW = Game::ArenaWidth * zoom;
+        float arenaH = Game::ArenaHeight * zoom;
 
         Rectangle arenaRect = {screenCenter.x - arenaW / 2.0f, screenCenter.y - arenaH / 2.0f, arenaW, arenaH};
         DrawRectangleLinesEx(arenaRect, 4.0f, {80, 90, 100, 255});
 
         float gridSize = 5.0f;
-        for (float x = GameState::ArenaMinX; x <= GameState::ArenaMaxX; x += gridSize) {
-            Vector2 start = {screenCenter.x + x * zoom, screenCenter.y + GameState::ArenaMinY * zoom};
-            Vector2 end = {screenCenter.x + x * zoom, screenCenter.y + GameState::ArenaMaxY * zoom};
+        for (float x = Game::ArenaMinX; x <= Game::ArenaMaxX; x += gridSize) {
+            Vector2 start = {screenCenter.x + x * zoom, screenCenter.y + Game::ArenaMinY * zoom};
+            Vector2 end = {screenCenter.x + x * zoom, screenCenter.y + Game::ArenaMaxY * zoom};
             DrawLineV(start, end, {50, 55, 60, 100});
         }
-        for (float y = GameState::ArenaMinY; y <= GameState::ArenaMaxY; y += gridSize) {
-            Vector2 start = {screenCenter.x + GameState::ArenaMinX * zoom, screenCenter.y + y * zoom};
-            Vector2 end = {screenCenter.x + GameState::ArenaMaxX * zoom, screenCenter.y + y * zoom};
+        for (float y = Game::ArenaMinY; y <= Game::ArenaMaxY; y += gridSize) {
+            Vector2 start = {screenCenter.x + Game::ArenaMinX * zoom, screenCenter.y + y * zoom};
+            Vector2 end = {screenCenter.x + Game::ArenaMaxX * zoom, screenCenter.y + y * zoom};
             DrawLineV(start, end, {50, 55, 60, 100});
         }
 
