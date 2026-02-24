@@ -9,18 +9,13 @@
 		{
 			"name": "base",
 			"hidden": true,
-			"cacheVariables": {
-				"CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
-			}
+			"generator": "Ninja Multi-Config",
+			"binaryDir": "${sourceDir}/out/build/${presetName}"
 		},
 		{
-			"name": "windows",
+			"name": "windows-base",
 			"hidden": true,
 			"inherits": "base",
-			"cmakeExecutable": "C:/Program Files/CMake/bin/cmake.exe",
-			"cacheVariables": {
-				"CMAKE_RC_COMPILER": "C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/rc.exe"
-			},
 			"condition": {
 				"type": "equals",
 				"lhs": "${hostSystemName}",
@@ -28,87 +23,198 @@
 			}
 		},
 		{
-			"name": "clang",
+			"name": "linux-base",
 			"hidden": true,
-			"inherits": "windows",
-			"generator": "Ninja Multi-Config",
-			"binaryDir": "${sourceDir}/out/build/clang",
-			"cacheVariables": {
-				"CMAKE_C_COMPILER": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang.exe",
-				"CMAKE_CXX_COMPILER": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang.exe"
+			"inherits": "base",
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Linux"
 			}
 		},
 		{
-			"name": "debug",
-			"displayName": "Debug",
-			"inherits": "clang"
-		},
-		{
-			"name": "release",
-			"displayName": "Release",
-			"inherits": "clang"
-		},
-		{
-			"name": "asan",
-			"displayName": "ASan Debug",
-			"inherits": "windows",
-			"generator": "Ninja Multi-Config",
-			"binaryDir": "${sourceDir}/out/build/asan",
+			"name": "windows-msvc",
+			"displayName": "Windows MSVC",
+			"description": "Windows with MSVC",
+			"inherits": "windows-base",
 			"cacheVariables": {
-				"CMAKE_C_COMPILER": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang.exe",
-				"CMAKE_CXX_COMPILER": "C:/Program Files/Microsoft Visual Studio/18/Community/VC/Tools/Llvm/x64/bin/clang.exe",
+				"CMAKE_C_COMPILER": "cl",
+				"CMAKE_CXX_COMPILER": "cl"
+			}
+		},
+		{
+			"name": "windows-client-debug",
+			"displayName": "Windows MSVC Client Debug",
+			"inherits": "windows-msvc"
+		},
+		{
+			"name": "windows-client-release",
+			"displayName": "Windows MSVC Client Release",
+			"inherits": "windows-msvc"
+		},
+		{
+			"name": "windows-server-debug",
+			"displayName": "Windows MSVC Server Debug",
+			"inherits": "windows-msvc"
+		},
+		{
+			"name": "windows-server-release",
+			"displayName": "Windows MSVC Server Release",
+			"inherits": "windows-msvc"
+		},
+		{
+			"name": "windows-clang",
+			"displayName": "Windows Clang",
+			"description": "Windows with Clang",
+			"inherits": "windows-base",
+			"cacheVariables": {
+				"CMAKE_C_COMPILER": "clang",
+				"CMAKE_CXX_COMPILER": "clang++"
+			}
+		},
+		{
+			"name": "linux",
+			"displayName": "Linux",
+			"description": "Linux with Clang",
+			"inherits": "linux-base",
+			"cacheVariables": {
+				"CMAKE_C_COMPILER": "clang",
+				"CMAKE_CXX_COMPILER": "clang++"
+			}
+		},
+		{
+			"name": "asan-base",
+			"hidden": true,
+			"cacheVariables": {
 				"ENABLE_ASAN": "ON"
 			}
+		},
+		{
+			"name": "windows-clang-asan",
+			"displayName": "Windows Clang ASan",
+			"inherits": ["windows-clang", "asan-base"]
+		},
+		{
+			"name": "linux-asan",
+			"displayName": "Linux ASan",
+			"inherits": ["linux", "asan-base"]
+		},
+		{
+			"name": "wasm-base",
+			"hidden": true,
+			"inherits": "base",
+			"cacheVariables": {
+				"CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+				"CMAKE_EXE_LINKER_FLAGS": "-s USE_GLFW=3 -s WASM=1"
+			}
+		},
+		{
+			"name": "wasm",
+			"displayName": "WASM (Emscripten)",
+			"description": "WebAssembly build using emscripten",
+			"inherits": "wasm-base"
 		}
 	],
 	"buildPresets": [
 		{
-			"name": "client-debug",
-			"configurePreset": "debug",
-			"targets": [
-				"client"
-			],
+			"name": "windows-client-debug",
+			"configurePreset": "windows-client-debug",
 			"configuration": "Debug"
 		},
 		{
-			"name": "client-release",
-			"configurePreset": "release",
-			"targets": [
-				"client"
-			],
+			"name": "windows-client-release",
+			"configurePreset": "windows-client-release",
 			"configuration": "Release"
 		},
 		{
-			"name": "server-debug",
-			"configurePreset": "debug",
-			"targets": [
-				"server"
-			],
+			"name": "windows-server-debug",
+			"configurePreset": "windows-server-debug",
 			"configuration": "Debug"
 		},
 		{
-			"name": "server-release",
-			"configurePreset": "release",
-			"targets": [
-				"server"
-			],
+			"name": "windows-server-release",
+			"configurePreset": "windows-server-release",
 			"configuration": "Release"
 		},
 		{
-			"name": "client-asan",
-			"configurePreset": "asan",
-			"targets": [
-				"client"
-			],
+			"name": "windows-client-debug-clang",
+			"configurePreset": "windows-clang",
 			"configuration": "Debug"
 		},
 		{
-			"name": "server-asan",
-			"configurePreset": "asan",
-			"targets": [
-				"server"
-			],
+			"name": "windows-client-release-clang",
+			"configurePreset": "windows-clang",
+			"configuration": "Release"
+		},
+		{
+			"name": "windows-server-debug-clang",
+			"configurePreset": "windows-clang",
 			"configuration": "Debug"
+		},
+		{
+			"name": "windows-server-release-clang",
+			"configurePreset": "windows-clang",
+			"configuration": "Release"
+		},
+		{
+			"name": "windows-client-asan",
+			"configurePreset": "windows-clang-asan",
+			"configuration": "Debug"
+		},
+		{
+			"name": "windows-server-asan",
+			"configurePreset": "windows-clang-asan",
+			"configuration": "Debug"
+		},
+		{
+			"name": "linux-client-debug",
+			"configurePreset": "linux",
+			"configuration": "Debug"
+		},
+		{
+			"name": "linux-client-release",
+			"configurePreset": "linux",
+			"configuration": "Release"
+		},
+		{
+			"name": "linux-server-debug",
+			"configurePreset": "linux",
+			"configuration": "Debug"
+		},
+		{
+			"name": "linux-server-release",
+			"configurePreset": "linux",
+			"configuration": "Release"
+		},
+		{
+			"name": "linux-client-asan",
+			"configurePreset": "linux-asan",
+			"configuration": "Debug"
+		},
+		{
+			"name": "linux-server-asan",
+			"configurePreset": "linux-asan",
+			"configuration": "Debug"
+		},
+		{
+			"name": "wasm-client-debug",
+			"configurePreset": "wasm",
+			"configuration": "Debug"
+		},
+		{
+			"name": "wasm-client-release",
+			"configurePreset": "wasm",
+			"configuration": "Release"
+		},
+		{
+			"name": "wasm-server-debug",
+			"configurePreset": "wasm",
+			"configuration": "Debug"
+		},
+		{
+			"name": "wasm-server-release",
+			"configurePreset": "wasm",
+			"configuration": "Release"
 		}
 	]
 }

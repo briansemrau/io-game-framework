@@ -32,7 +32,7 @@ public:
         return archive(
             self.tickCount,
             self.server_subobject_id_counter,
-            self.testData,
+            self.testData
         );
     }
 };

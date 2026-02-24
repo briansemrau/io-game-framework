@@ -17,7 +17,9 @@ add_subdirectory(thirdparty/raylib)
 if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     add_subdirectory(thirdparty/datachannel-wasm)
 else()
-    set(NO_MEDIA ON CACHE BOOL "Disable media transport support" FORCE)
+    set(NO_MEDIA ON CACHE BOOL "" FORCE)
+    set(NO_EXAMPLES ON CACHE BOOL "" FORCE)
+    set(NO_TESTS ON CACHE BOOL "" FORCE)
     add_subdirectory(thirdparty/libdatachannel)
 endif()
 
@@ -82,7 +84,7 @@ set_target_properties(client PROPERTIES
 )
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
-    set_target_properties(${target} PROPERTIES SUFFIX ".html")
+    set_target_properties(client PROPERTIES SUFFIX ".html")
     target_link_options(${target} PRIVATE
         "-sUSE_GLFW=3"
         "-sWASM=1"

@@ -1,136 +1,85 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "CMake: Configure",
-            "presentation": {
-                "reveal": "silent"
-            },
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "-S",
-                ".",
-                "-B",
-                "./out/build"
-            ],
-            "problemMatcher": [],
-            "group": "none"
-        },
-        {
-            "label": "CMake: Build (preset)",
-            "presentation": {
-                "reveal": "silent"
-            },
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "--preset",
-                "${input:buildPreset}"
-            ],
-            "group": "build",
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "dependsOn": [
-                "CMake: Configure"
-            ]
-        },
-        {
-            "label": "CMake: Build Client (Debug)",
-            "presentation": {
-                "reveal": "silent"
-            },
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "--preset",
-                "client-debug"
-            ],
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build",
-            "dependsOn": [
-                "CMake: Configure"
-            ]
-        },
-        {
-            "label": "CMake: Build Client (Release)",
-            "presentation": {
-                "reveal": "silent"
-            },
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "--preset",
-                "client-release"
-            ],
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build",
-            "dependsOn": [
-                "CMake: Configure"
-            ]
-        },
-        {
-            "label": "CMake: Build Server (Debug)",
-            "presentation": {
-                "reveal": "silent"
-            },
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "--preset",
-                "server-debug"
-            ],
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build",
-            "dependsOn": [
-                "CMake: Configure"
-            ]
-        },
-        {
-            "label": "CMake: Build Server (Release)",
-            "presentation": {
-                "reveal": "silent"
-            },
-            "type": "shell",
-            "command": "cmake",
-            "args": [
-                "--build",
-                "--preset",
-                "server-release"
-            ],
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": "build",
-            "dependsOn": [
-                "CMake: Configure"
-            ]
-        },
-    ],
-    "inputs": [
-        {
-            "id": "buildPreset",
-            "type": "pickString",
-            "options": [
-                "client-debug",
-                "client-release",
-                "server-debug",
-                "server-release",
-                "client-asan",
-                "server-asan"
-            ],
-            "default": "client-debug"
-        }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build: Linux Server (Release)",
+			"type": "shell",
+			"command": "bash",
+			"args": ["./scripts/build-linux-server.sh", "release"],
+			"problemMatcher": ["$gcc"],
+			"group": "build"
+		},
+		{
+			"label": "Build: Linux Server (Debug)",
+			"type": "shell",
+			"command": "bash",
+			"args": ["./scripts/build-linux-server.sh", "debug"],
+			"problemMatcher": ["$gcc"],
+			"group": "build"
+		},
+		{
+			"label": "Build: Linux Client (Release)",
+			"type": "shell",
+			"command": "bash",
+			"args": ["./scripts/build-linux-client.sh", "release"],
+			"problemMatcher": ["$gcc"],
+			"group": "build"
+		},
+		{
+			"label": "Build: Linux Client (Debug)",
+			"type": "shell",
+			"command": "bash",
+			"args": ["./scripts/build-linux-client.sh", "debug"],
+			"problemMatcher": ["$gcc"],
+			"group": "build"
+		},
+		{
+			"label": "Build: WASM Client (Release)",
+			"type": "shell",
+			"command": "bash",
+			"args": ["./scripts/build-wasm-client.sh", "release"],
+			"problemMatcher": ["$gcc"],
+			"group": "build"
+		},
+		{
+			"label": "Build: WASM Client (Debug)",
+			"type": "shell",
+			"command": "bash",
+			"args": ["./scripts/build-wasm-client.sh", "debug"],
+			"problemMatcher": ["$gcc"],
+			"group": "build"
+		},
+		{
+			"label": "Build: Windows MSVC Client (Release)",
+			"type": "shell",
+			"command": "powershell",
+			"args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "./scripts/build-windows-msvc-client.ps1", "release"],
+			"problemMatcher": ["$msCompile"],
+			"group": "build"
+		},
+		{
+			"label": "Build: Windows MSVC Client (Debug)",
+			"type": "shell",
+			"command": "powershell",
+			"args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "./scripts/build-windows-msvc-client.ps1", "debug"],
+			"problemMatcher": ["$msCompile"],
+			"group": "build"
+		},
+		{
+			"label": "Build: Windows MSVC Server (Release)",
+			"type": "shell",
+			"command": "powershell",
+			"args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "./scripts/build-windows-msvc-server.ps1", "release"],
+			"problemMatcher": ["$msCompile"],
+			"group": "build"
+		},
+		{
+			"label": "Build: Windows MSVC Server (Debug)",
+			"type": "shell",
+			"command": "powershell",
+			"args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "./scripts/build-windows-msvc-server.ps1", "debug"],
+			"problemMatcher": ["$msCompile"],
+			"group": "build"
+		}
+	]
 }

@@ -5,44 +5,44 @@
             "name": "Launch Client (Debug)",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/out/build/clang/client/Debug/client.exe",
+            "program": "${workspaceFolder}/out/build/windows-client-debug/client/Debug/client.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": ".",
-            "preLaunchTask": "CMake: Build Client (Debug)",
+            "preLaunchTask": "Build: Windows MSVC Client (Debug)",
             "environment": []
         },
         {
             "name": "Launch Client (Release)",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/out/build/clang/client/Release/client.exe",
+            "program": "${workspaceFolder}/out/build/windows-client-release/client/Release/client.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": ".",
-            "preLaunchTask": "CMake: Build Client (Release)",
+            "preLaunchTask": "Build: Windows MSVC Client (Release)",
             "environment": []
         },
         {
             "name": "Launch Server (Debug)",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/out/build/clang/server/Debug/server.exe",
+            "program": "${workspaceFolder}/out/build/windows-server-debug/server/Debug/server.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": ".",
-            "preLaunchTask": "CMake: Build Server (Debug)",
+            "preLaunchTask": "Build: Windows MSVC Server (Debug)",
             "environment": []
         },
         {
             "name": "Launch Server (Release)",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/out/build/clang/server/Release/server.exe",
+            "program": "${workspaceFolder}/out/build/windows-server-release/server/Release/server.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": ".",
-            "preLaunchTask": "CMake: Build Server (Release)",
+            "preLaunchTask": "Build: Windows MSVC Server (Release)",
             "environment": []
         }
     ]
