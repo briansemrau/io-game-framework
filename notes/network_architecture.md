@@ -2,8 +2,8 @@
 
 ## Rollback Resim
 
-<details>
-<summary>Sequence Diagram</summary>
+<!-- <details>
+<summary>Sequence Diagram</summary> -->
 
 ```mermaid
 sequenceDiagram
@@ -34,7 +34,7 @@ sequenceDiagram
         activate ServerNet
         ServerNet->>ServerNet: filter state
         ServerNet->>ServerNet: encode data
-        ServerNet-->>ClientNet: UDP
+        ServerNet-->>ClientNet: UDP (WebRTC)
         deactivate ServerNet
         activate ClientNet
     end
@@ -78,7 +78,7 @@ sequenceDiagram
     end
 ```
 
-</details>
+<!-- </details> -->
 
 
 ## Network IDs

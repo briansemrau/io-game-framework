@@ -41,10 +41,14 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <chrono>
+
+#include "game.h"
 
 class NetworkServer {
 public:
     using ClientId = uint32_t;
+    using Seconds = std::chrono::duration<float, std::ratio<1>>;
 
     // Callbacks are invoked from the network thread, not the main thread.
     // Queue events if you need to process them on a different thread.
@@ -61,7 +65,7 @@ public:
         uint16_t portRangeEnd = 0;
     };
 
-    explicit NetworkServer(Config config);
+    NetworkServer(Config config, const Game &game);
     ~NetworkServer();
 
     NetworkServer(const NetworkServer&) = delete;
@@ -69,7 +73,6 @@ public:
     NetworkServer(NetworkServer&&) = delete;
     NetworkServer& operator=(NetworkServer&&) = delete;
 
-    // Start/stop the network thread. Call start() before accepting connections.
     void start();
     void stop();
     bool isRunning() const;
@@ -104,53 +107,43 @@ public:
     // 'mid' is the media ID identifying which ICE stream this belongs to.
     void setRemoteCandidate(ClientId clientId, const std::string& candidate, const std::string& mid);
 
-    // Set callbacks for connection events. Replace previous callback if any.
     void setMessageCallback(MessageCallback callback);
     void setConnectCallback(ConnectCallback callback);
     void setDisconnectCallback(DisconnectCallback callback);
 
 private:
     // Internal state for each connected client.
-    // peerConnection: The WebRTC connection to this client
-    // dataChannel: The actual data transport (like a WebSocket)
-    // localDescription: Cached SDP for signaling
-    // pendingCandidates: ICE candidates received before DataChannel opens
     struct ClientConnection {
-        std::shared_ptr<rtc::PeerConnection> peerConnection;
-        std::shared_ptr<rtc::DataChannel> dataChannel;
-        std::string localDescription;
-        std::vector<std::string> pendingCandidates;
+        std::shared_ptr<rtc::PeerConnection> peerConnection; // The WebRTC connection to this client
+        std::shared_ptr<rtc::DataChannel> dataChannel; // The actual data transport (like a WebSocket)
+        std::string localDescription; // Cached SDP for signaling
+        std::vector<std::string> pendingCandidates; // ICE candidates received before DataChannel opens
         bool connected = false;
     };
 
-    // Main network thread loop. Processes WebRTC events and outgoing messages.
     void run();
 
-    // Process all queued outgoing messages.
     void processOutgoing();
 
-    // Create and configure a new PeerConnection for a client.
     void handleNewClient(ClientId clientId);
 
-    // Set up callbacks on the PeerConnection (state changes, ICE gathering).
     void setupPeerConnectionCallbacks(ClientId clientId, ClientConnection& conn);
-
-    // Set up callbacks on the DataChannel (open, message, close).
     void setupDataChannelCallbacks(ClientId clientId, ClientConnection& conn);
 
-    // Configuration passed to constructor.
+    // Configuration
     Config m_config;
 
-    // Network thread control.
+    // Thread control.
     std::atomic<bool> m_running{false};
     std::thread m_networkThread;
+    Seconds m_tickPeriod{0.1f};
 
-    // Client state map, protected by mutex for thread safety.
+    // Client state
     std::mutex m_clientsMutex;
     std::unordered_map<ClientId, std::unique_ptr<ClientConnection>> m_clients;
     std::atomic<ClientId> m_nextClientId{1};
 
-    // Outgoing message queue. Main thread queues, network thread processes.
+    // Tx message queue
     struct OutgoingMessage {
         ClientId clientId;
         std::vector<std::byte> data;
@@ -160,10 +153,11 @@ private:
     std::condition_variable m_outgoingCv;
     std::queue<OutgoingMessage> m_outgoingQueue;
 
-    // Callbacks, protected by mutex.
     std::mutex m_callbackMutex;
     MessageCallback m_messageCallback;
     ConnectCallback m_connectCallback;
     DisconnectCallback m_disconnectCallback;
+
+    // TODO need const ref to game (shared ptr? ref? c pointer?)
 };
 #endif  // NETWORK_SERVER_H

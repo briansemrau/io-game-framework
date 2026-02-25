@@ -2,6 +2,7 @@
 #define GAME_STATE_H
 
 #include <memory>
+#include <shared_mutex>
 #include <vector>
 
 #include "box2d/box2d.h"
@@ -49,7 +50,7 @@ public:
     static constexpr float ArenaMaxX = ArenaWidth / 2.0f;
     static constexpr float ArenaMaxY = ArenaHeight / 2.0f;
 
-    Game();
+    Game(bool p_isServer = false);
     Game(const Game &) = delete;
     Game(Game &&) noexcept = delete;
     Game &operator=(const Game &) = delete;
@@ -65,8 +66,9 @@ private:
     void createArenaWall(b2Vec2 center, b2Vec2 halfSize);
     void createArena();
 
-    bool m_isServer{};
-    GameState m_state{};
+    bool m_isServer{false};
+    GameState m_state;
+    std::shared_mutex m_stateMutex;
 };
 
 #endif  // GAME_STATE_H

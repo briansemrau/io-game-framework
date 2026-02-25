@@ -16,3 +16,6 @@
 [submodule "thirdparty/datachannel-wasm"]
 	path = thirdparty/datachannel-wasm
 	url = https://github.com/paullouisageneau/datachannel-wasm.git
+[submodule "thirdparty/plog"]
+	path = thirdparty/plog
+	url = https://github.com/SergiusTheBest/plog.git

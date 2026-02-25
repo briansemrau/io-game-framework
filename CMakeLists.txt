@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Dependencies - platform-agnostic
+add_subdirectory(thirdparty/plog)
 add_subdirectory(thirdparty/box2d)
 add_subdirectory(thirdparty/entt)
 add_subdirectory(thirdparty/raylib)
@@ -20,6 +21,8 @@ else()
     set(NO_MEDIA ON CACHE BOOL "" FORCE)
     set(NO_EXAMPLES ON CACHE BOOL "" FORCE)
     set(NO_TESTS ON CACHE BOOL "" FORCE)
+    set(USE_SYSTEM_PLOG ON CACHE BOOL "" FORCE)
+    set(plog_INCLUDE_DIR thirdparty/plog/include)
     add_subdirectory(thirdparty/libdatachannel)
 endif()
 
@@ -57,7 +60,7 @@ file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS src/common/*.cpp)
 
 add_library(common STATIC ${COMMON_SOURCES})
 
-target_link_libraries(common PUBLIC box2d transport)
+target_link_libraries(common PUBLIC box2d transport plog)
 target_include_directories(common PUBLIC thirdparty/zpp_bits)
 target_include_directories(common PUBLIC
     ${CMAKE_SOURCE_DIR}/src

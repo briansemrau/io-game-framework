@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <numbers>
+#include <shared_mutex>
 
 #include "box2d/box2d.h"
 #include "physics_settings.h"
@@ -42,15 +43,21 @@ GameState::~GameState() {
 }
 
 void Game::step() {
+    std::unique_lock lock(m_stateMutex);
+
     const float deltaTime = FixedTimestepDuration;
     b2World_Step(m_state.worldId, deltaTime, 4);
 }
 
 void Game::setState(GameState &p_state) {
+    std::unique_lock lock(m_stateMutex);
+
     m_state = p_state;
 }
 
 const GameState &Game::getState() const {
+    std::shared_lock lock(m_stateMutex);
+
     return m_state;
 }
 
@@ -84,7 +91,7 @@ void Game::createArena() {
     createArenaWall({min.x - wallThickness, 0.0f}, {wallThickness, max.y + wallThickness});
 }
 
-Game::Game() {
+Game::Game(bool p_isServer) : m_isServer(p_isServer) {
     createArena();
 
     // TODO slot/signals
