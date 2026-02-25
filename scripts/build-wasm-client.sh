@@ -12,7 +12,7 @@ fi
 
 source "$EMSDK_PATH/emsdk_env.sh" 2>/dev/null || true
 
-BUILD_DIR="out/build/wasm-client-$CONFIG"
+BUILD_DIR="out/wasm-client-$CONFIG/build"
 
 echo "Configuring WASM Client ($CONFIG)..."
 cmake -S . -B "$BUILD_DIR" -G "Ninja Multi-Config" \

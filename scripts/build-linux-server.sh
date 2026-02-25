@@ -2,7 +2,7 @@
 set -e
 
 CONFIG="${1:-release}"
-BUILD_DIR="out/build/linux-server-$CONFIG"
+BUILD_DIR="out/linux-server-$CONFIG/build"
 
 echo "Configuring Linux Server ($CONFIG)..."
 cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -S . -B "$BUILD_DIR" -G "Ninja Multi-Config"

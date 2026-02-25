@@ -20,7 +20,7 @@ if (-not (Test-Path $vcvarsall)) {
 }
 
 $config = $args[0]
-$buildDir = "out/build/windows-server-$config"
+$buildDir = "out/windows-server-$config/build"
 
 Write-Host "Configuring Windows MSVC Server ($config)..."
 cmd /c "`"$vcvarsall`" x64 >NUL 2>&1 && cmake -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -S . -B $buildDir -G `"Ninja Multi-Config`""
