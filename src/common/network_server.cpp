@@ -1,5 +1,8 @@
 #include "network_server.h"
 
+#include <plog/Log.h>
+
+#include <nlohmann/json.hpp>
 #include <chrono>
 #include <cstring>
 #include <iostream>
@@ -22,7 +25,6 @@ void NetworkServer::stop() {
         return;
     }
     m_running.store(false);
-    m_outgoingCv.notify_all();
     if (m_networkThread.joinable()) {
         m_networkThread.join();
     }
@@ -32,23 +34,73 @@ void NetworkServer::stop() {
 
 bool NetworkServer::isRunning() const { return m_running.load(); }
 
-void NetworkServer::send(ClientId clientId, const std::vector<std::byte>& data) {
-    std::lock_guard lock(m_outgoingMutex);
-    m_outgoingQueue.push({clientId, data, false});
-    m_outgoingCv.notify_one();
-}
+// void NetworkServer::startSignaling(uint16_t port) {
+//     rtc::Configuration config;
 
-void NetworkServer::broadcast(const std::vector<std::byte>& data) {
-    std::lock_guard lock(m_outgoingMutex);
-    m_outgoingQueue.push({0, data, true});
-    m_outgoingCv.notify_one();
-}
+//     // TODO put this in some config file
+//     const std::vector<std::string> iceServerURLs{
+//         {"stun:stun.l.google.com:19302"}, {"stun:stun.l.google.com:5349"},  {"stun:stun1.l.google.com:3478"}, {"stun:stun1.l.google.com:5349"},  {"stun:stun2.l.google.com:19302"},
+//         {"stun:stun2.l.google.com:5349"}, {"stun:stun3.l.google.com:3478"}, {"stun:stun3.l.google.com:5349"}, {"stun:stun4.l.google.com:19302"}, {"stun:stun4.l.google.com:5349"}};
+//     for (const auto& server : iceServerURLs) {
+//         config.iceServers.push_back(rtc::IceServer(server));
+//     }
 
-NetworkServer::ClientId NetworkServer::acceptConnection() {
-    ClientId clientId = m_nextClientId.fetch_add(1);
-    handleNewClient(clientId);
-    return clientId;
-}
+//     config.enableIceUdpMux = true;
+//     // m_localID = randomId(32);
+//     // PLOG_DEBUG << "Local ID: " << m_localID;
+
+//     auto ws = std::make_shared<rtc::WebSocket>();
+
+//     std::promise<void> wsPromise;
+//     auto wsFuture = wsPromise.get_future();
+
+//     ws->onOpen([&wsPromise]() {
+//         PLOG_DEBUG << "Websocket connected; ready to signal";
+//         wsPromise.set_value();
+//     });
+//     ws->onError([&wsPromise](std::string s) {
+//         PLOG_DEBUG << "Websocket error";
+//         wsPromise.set_exception(std::make_exception_ptr(std::runtime_error(s)));
+//     });
+//     ws->onClosed([]() { PLOG_DEBUG << "Websocket closed"; });
+
+//     ws->onMessage([this, &config, wws = static_cast<std::weak_ptr<rtc::WebSocket>>(ws)](auto data) {
+//         if (!std::holds_alternative<std::string>(data)) return;
+
+//         nlohmann::json message = nlohmann::json::parse(std::get<std::string>(data));
+
+//         auto it = message.find("id");
+//         if (it == message.end()) return;
+//         auto id = it->get<std::string>();
+
+//         it = message.find("type");
+//         if (it == message.end()) return;
+//         auto type = it->get<std::string>();
+
+//         if (m_peerConnection != nullptr) {
+//             // do nothing
+//         } else if (!m_peerConnection && type == "offer") {
+//             PLOG_DEBUG << "Answering to " << id;
+//             createPeerConnection(config, wws, id);
+//         } else {
+//             PLOG_DEBUG << "Peer connection already exists and type is " << type << ". How did we get here?";
+//             return;
+//         }
+
+//         if (type == "offer" || type == "answer") {
+//             auto sdp = message["description"].get<std::string>();
+//             m_peerConnection->setRemoteDescription(rtc::Description(sdp, type));
+//         } else if (type == "candidate") {
+//             auto sdp = message["candidate"].get<std::string>();
+//             auto mid = message["mid"].get<std::string>();
+//             m_peerConnection->addRemoteCandidate(rtc::Candidate(sdp, mid));
+//         }
+//     });
+
+//     const std::string url = (serverUrl.find("://") == std::string::npos ? "ws://" : "") + serverUrl + ":" + std::to_string(serverPort) + "/" + m_localID;
+//     ws->open(url);
+//     PLOG_DEBUG << "Waiting for websocket to connect...";
+// }
 
 void NetworkServer::run() {
     auto previousTime = std::chrono::steady_clock::now();
@@ -60,7 +112,8 @@ void NetworkServer::run() {
         remainingTime += elapsed;
 
         if (remainingTime >= m_tickPeriod) {
-            processOutgoing();
+            // TODO copy game state, ...
+
             remainingTime -= m_tickPeriod;
         }
 
@@ -73,167 +126,4 @@ void NetworkServer::run() {
             std::this_thread::sleep_for(sleepTime);
         }
     }
-}
-
-void NetworkServer::processOutgoing() {
-    std::unique_lock lock(m_outgoingMutex);
-    m_outgoingCv.wait_for(lock, std::chrono::milliseconds(10), [this] { return !m_outgoingQueue.empty() || !m_running.load(); });
-
-    while (!m_outgoingQueue.empty()) {
-        OutgoingMessage msg = m_outgoingQueue.front();
-        m_outgoingQueue.pop();
-        lock.unlock();
-
-        std::lock_guard clientsLock(m_clientsMutex);
-        if (msg.broadcast) {
-            for (auto& [id, conn] : m_clients) {
-                if (conn && conn->connected && conn->dataChannel) {
-                    conn->dataChannel->send(reinterpret_cast<const std::byte*>(msg.data.data()), msg.data.size());
-                }
-            }
-        } else {
-            auto it = m_clients.find(msg.clientId);
-            if (it != m_clients.end() && it->second && it->second->connected && it->second->dataChannel) {
-                it->second->dataChannel->send(reinterpret_cast<const std::byte*>(msg.data.data()), msg.data.size());
-            }
-        }
-
-        lock.lock();
-    }
-}
-
-void NetworkServer::handleNewClient(ClientId clientId) {
-    auto conn = std::make_unique<ClientConnection>();
-
-    rtc::Configuration config;
-
-    // TODO
-
-    conn->peerConnection = std::make_shared<rtc::PeerConnection>(config);
-
-    {
-        std::lock_guard lock(m_clientsMutex);
-        m_clients[clientId] = std::move(conn);
-    }
-
-    setupPeerConnectionCallbacks(clientId);
-
-    rtc::DataChannelInit dcConfig;
-    dcConfig.negotiated = true;
-    dcConfig.id = 0;
-    {
-        std::lock_guard lock(m_clientsMutex);
-        auto it = m_clients.find(clientId);
-        if (it != m_clients.end() && it->second->peerConnection) {
-            it->second->dataChannel = it->second->peerConnection->createDataChannel("game", dcConfig);
-        }
-    }
-
-    setupDataChannelCallbacks(clientId);
-
-    std::lock_guard lock(m_clientsMutex);
-    auto it = m_clients.find(clientId);
-    if (it != m_clients.end() && it->second->peerConnection) {
-        auto localDescription = it->second->peerConnection->localDescription().value();
-        it->second->localDescription = std::string(localDescription);
-    }
-}
-
-void NetworkServer::setupPeerConnectionCallbacks(ClientId clientId) {
-    std::lock_guard lock(m_clientsMutex);
-    auto it = m_clients.find(clientId);
-    if (it == m_clients.end() || !it->second->peerConnection) {
-        return;
-    }
-    auto& conn = *it->second;
-
-    conn.peerConnection->onLocalDescription([this, clientId](const rtc::Description& desc) {
-        std::lock_guard lock(m_clientsMutex);
-        auto it = m_clients.find(clientId);
-        if (it != m_clients.end()) {
-            it->second->localDescription = std::string(desc);
-        }
-    });
-
-    conn.peerConnection->onLocalCandidate([this, clientId](const rtc::Candidate& cand) {});
-
-    conn.peerConnection->onStateChange([this, clientId](rtc::PeerConnection::State state) {
-        if (state == rtc::PeerConnection::State::Disconnected || state == rtc::PeerConnection::State::Failed) {
-            std::lock_guard lock(m_clientsMutex);
-            auto it = m_clients.find(clientId);
-            if (it != m_clients.end()) {
-                it->second->connected = false;
-            }
-
-        }
-    });
-
-    conn.peerConnection->onDataChannel([this, clientId](std::shared_ptr<rtc::DataChannel> dataChannel) {
-        std::lock_guard lock(m_clientsMutex);
-        auto it = m_clients.find(clientId);
-        if (it != m_clients.end()) {
-            it->second->dataChannel = dataChannel;
-            setupDataChannelCallbacks(clientId);
-        }
-    });
-}
-
-void NetworkServer::setupDataChannelCallbacks(ClientId clientId) {
-    // std::shared_ptr<rtc::DataChannel> dataChannel;
-    // {
-    //     std::lock_guard lock(m_clientsMutex);
-    //     auto it = m_clients.find(clientId);
-    //     if (it == m_clients.end()) {
-    //         return;
-    //     }
-    //     dataChannel = it->second->dataChannel;
-    // }
-
-    // if (!dataChannel) {
-    //     return;
-    // }
-
-    // dataChannel->onOpen([this, clientId]() {
-    //     std::lock_guard lock(m_clientsMutex);
-    //     auto it = m_clients.find(clientId);
-    //     if (it != m_clients.end()) {
-    //         it->second->connected = true;
-    //     }
-    //     std::lock_guard cbLock(m_callbackMutex);
-    //     if (m_connectCallback) {
-    //         m_connectCallback(clientId);
-    //     }
-    // });
-
-    // dataChannel->onMessage([this, clientId](const std::variant<rtc::Binary, std::string>& msg) {
-    //     std::vector<std::byte> data;
-    //     if (std::holds_alternative<rtc::Binary>(msg)) {
-    //         const auto& bin = std::get<rtc::Binary>(msg);
-    //         data.resize(bin.size());
-    //         std::memcpy(data.data(), bin.data(), bin.size());
-    //     } else {
-    //         const auto& str = std::get<std::string>(msg);
-    //         data.resize(str.size());
-    //         std::memcpy(data.data(), str.data(), str.size());
-    //     }
-    //     std::lock_guard cbLock(m_callbackMutex);
-    //     if (m_messageCallback) {
-    //         m_messageCallback(clientId, data);
-    //     }
-    // });
-
-    // dataChannel->onClosed([this, clientId]() {
-    //     {
-    //         std::lock_guard lock(m_clientsMutex);
-    //         auto it = m_clients.find(clientId);
-    //         if (it != m_clients.end()) {
-    //             it->second->connected = false;
-    //             m_clients.erase(it);
-    //         }
-    //     }
-    //     std::lock_guard cbLock(m_callbackMutex);
-    //     if (m_disconnectCallback) {
-    //         m_disconnectCallback(clientId);
-    //     }
-    // });
 }

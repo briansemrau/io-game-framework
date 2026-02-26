@@ -9,30 +9,14 @@
 #include <iostream>
 #include <memory>
 #include <nlohmann/json.hpp>
-#include <random>
 
 #include "network_common.h"
-
-std::string randomId(size_t length) {
-    using std::chrono::high_resolution_clock;
-    static thread_local std::mt19937 rng(static_cast<unsigned int>(high_resolution_clock::now().time_since_epoch().count()));
-    static const std::string characters("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-    std::string id(length, '0');
-    std::uniform_int_distribution<int> uniform(0, int(characters.size() - 1));
-    std::generate(id.begin(), id.end(), [&]() { return characters.at(uniform(rng)); });
-    return id;
-}
 
 NetworkClient::NetworkClient(const Game& game) : m_game(game) {}
 
 NetworkClient::~NetworkClient() { disconnect(); }
 
 void NetworkClient::connect(const std::string& serverUrl, uint16_t serverPort) {
-    if (m_connected.load()) {
-        PLOG_DEBUG << "NetworkClient already connected";
-        return;
-    }
-
     rtc::Configuration config;
 
     // TODO put this in some config file
@@ -44,7 +28,7 @@ void NetworkClient::connect(const std::string& serverUrl, uint16_t serverPort) {
     }
 
     // config.enableIceUdpMux = true; // TODO enable on server
-    m_localID = randomId(32);
+    m_localID = generateRandomIDStr(32);
     PLOG_DEBUG << "Local ID: " << m_localID;
 
     auto ws = std::make_shared<rtc::WebSocket>();
@@ -98,10 +82,6 @@ void NetworkClient::connect(const std::string& serverUrl, uint16_t serverPort) {
     const std::string url = (serverUrl.find("://") == std::string::npos ? "ws://" : "") + serverUrl + ":" + std::to_string(serverPort) + "/" + m_localID;
     ws->open(url);
     PLOG_DEBUG << "Waiting for websocket to connect...";
-    try {
-        wsFuture.get();
-    } catch (std::runtime_error) {
-    }
 }
 
 void NetworkClient::createPeerConnection(const rtc::Configuration& config, std::weak_ptr<rtc::WebSocket> wws, std::string id) {
@@ -159,16 +139,14 @@ void NetworkClient::onStateMessage(std::vector<std::byte> data) {
 }
 
 void NetworkClient::disconnect() {
-    if (!m_connected.load()) {
-        return;
-    }
     if (m_peerConnection) {
         m_peerConnection->close();
         m_peerConnection.reset();
     }
     m_testDataChannel.reset();
     m_stateDataChannel.reset();
-    m_connected.store(false);
 }
 
-bool NetworkClient::isConnected() const { return m_connected.load(); }
+bool NetworkClient::isConnected() const {
+    return m_peerConnection != nullptr && m_peerConnection->state() == rtc::PeerConnection::State::Connected;
+}

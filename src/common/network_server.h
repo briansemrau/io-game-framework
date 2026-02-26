@@ -63,35 +63,18 @@ public:
     void stop();
     bool isRunning() const;
 
-    // Send data to a specific client or all connected clients.
-    // Thread-safe: queues message for the network thread to process.
-    void send(ClientId clientId, const std::vector<std::byte>& data);
-    void broadcast(const std::vector<std::byte>& data);
-
-    // Accept an incoming WebRTC connection request.
-    // Returns the new client ID that can be used to track this connection.
-    // After calling this, use getLocalDescription() to get the SDP offer
-    // to send to the client via your signaling mechanism.
-    ClientId acceptConnection();
-
 private:
-    // Internal state for each connected client.
     struct ClientConnection {
-        std::shared_ptr<rtc::PeerConnection> peerConnection;  // The WebRTC connection to this client
-        std::shared_ptr<rtc::DataChannel> dataChannel;        // The actual data transport (like a WebSocket)
-        std::string localDescription;                         // Cached SDP for signaling
-        std::vector<std::string> pendingCandidates;           // ICE candidates received before DataChannel opens
-        bool connected = false;
+        std::string localDescription;
+        std::vector<std::string> pendingCandidates;
+        std::shared_ptr<rtc::PeerConnection> peerConnection;
+        std::shared_ptr<rtc::DataChannel> m_testDataChannel;
+        std::shared_ptr<rtc::DataChannel> m_stateDataChannel;
     };
 
+    void startSignaling(uint16_t port);
+
     void run();
-
-    void processOutgoing();
-
-    void handleNewClient(ClientId clientId);
-
-    void setupPeerConnectionCallbacks(ClientId clientId);
-    void setupDataChannelCallbacks(ClientId clientId);
 
     const Game &m_game;
 

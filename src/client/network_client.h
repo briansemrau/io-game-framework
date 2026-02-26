@@ -42,8 +42,6 @@ private:
     std::shared_ptr<rtc::PeerConnection> m_peerConnection;
     std::shared_ptr<rtc::DataChannel> m_testDataChannel;
     std::shared_ptr<rtc::DataChannel> m_stateDataChannel;
-
-    std::atomic<bool> m_connected{false};
 };
 
 #endif  // NETWORK_CLIENT_H
