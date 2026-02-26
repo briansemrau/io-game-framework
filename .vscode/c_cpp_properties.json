@@ -3,7 +3,14 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/thirdparty/box2d/**",
+                "${workspaceFolder}/thirdparty/entt/**",
+                "${workspaceFolder}/thirdparty/json/**",
+                "${workspaceFolder}/thirdparty/libdatachannel/**",
+                "${workspaceFolder}/thirdparty/plog/**",
+                "${workspaceFolder}/thirdparty/raylib/**",
+                "${workspaceFolder}/thirdparty/zpp_bits/**"
             ],
             "defines": [
                 "_DEBUG",

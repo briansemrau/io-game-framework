@@ -9,10 +9,7 @@
 
 using Seconds = std::chrono::duration<float, std::ratio<1>>;
 
-ServerInstance::ServerInstance()
-    : m_networkServer(NetworkServer::Config{
-          .iceServers{"stun:stun.l.google.com:19302"},
-      }) {
+ServerInstance::ServerInstance() : m_networkServer(m_game) {
     // TODO
 }
 
@@ -67,8 +64,6 @@ void ServerInstance::run() {
             step();
             remainingTime -= current_timestep;
         }
-
-        // TODO queue networking work
 
         // And sleep
         const auto sleepTime = std::min(current_timestep - remainingTime, Seconds(1.0f));

@@ -29,13 +29,13 @@ public:
 
     b2WorldId worldId{};
 
-    constexpr static auto serialize(auto &archive, auto &self) {
-        return archive(
-            self.tickCount,
-            self.server_subobject_id_counter,
-            self.testData
-        );
-    }
+    // constexpr static auto serialize(auto &archive, auto &self) {
+    //     return archive(
+    //         self.tickCount,
+    //         self.server_subobject_id_counter,
+    //         self.testData
+    //     );
+    // }
 };
 
 class Game {
@@ -68,7 +68,7 @@ private:
 
     bool m_isServer{false};
     GameState m_state;
-    std::shared_mutex m_stateMutex;
+    mutable std::shared_mutex m_stateMutex;
 };
 
 #endif  // GAME_STATE_H

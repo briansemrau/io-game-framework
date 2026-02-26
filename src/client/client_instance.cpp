@@ -10,19 +10,25 @@
 #include <type_traits>
 #include <vector>
 
+namespace raylib {
 #include "raylib.h"
+}
 
 using Seconds = std::chrono::duration<float, std::ratio<1>>;
+
+ClientInstance::ClientInstance() : m_networkClient(m_game) {}
 
 void ClientInstance::run() {
     constexpr int screenWidth = 1280;
     constexpr int screenHeight = 720;
 
-    InitWindow(screenWidth, screenHeight, "Destruction Derby");
-    SetWindowState(FLAG_WINDOW_RESIZABLE);
-    SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
+    raylib::InitWindow(screenWidth, screenHeight, "Destruction Derby");
+    raylib::SetWindowState(raylib::FLAG_WINDOW_RESIZABLE);
+    raylib::SetTargetFPS(raylib::GetMonitorRefreshRate(raylib::GetCurrentMonitor()));
 
-    SetWindowTitle("Destruction Derby");
+    raylib::SetWindowTitle("Destruction Derby");
+
+    m_networkClient.connect("localhost", 9812);
 
     float timescale = 1.0;  // TODO get from server. maybe encapsulate in game state? or do we want some generic header
                             // data in the network data?
@@ -37,7 +43,7 @@ void ClientInstance::run() {
 
     auto previousTime = std::chrono::steady_clock::now();
     auto remainingTime = Seconds::zero();
-    while (!WindowShouldClose()) {
+    while (!raylib::WindowShouldClose()) {
         // The hands of time
         const auto currentTime = std::chrono::steady_clock::now();
         const Seconds elapsed = currentTime - previousTime;
@@ -45,7 +51,7 @@ void ClientInstance::run() {
         remainingTime += elapsed;
 
         // Window management I guess
-        SetTargetFPS(GetMonitorRefreshRate(GetCurrentMonitor()));
+        raylib::SetTargetFPS(raylib::GetMonitorRefreshRate(raylib::GetCurrentMonitor()));
 
         // Input
         handleInput();
@@ -61,7 +67,7 @@ void ClientInstance::run() {
         render();
     }
 
-    CloseWindow();
+    raylib::CloseWindow();
 }
 
 void ClientInstance::handleInput() {
@@ -76,13 +82,13 @@ void ClientInstance::handleInput() {
     float turnInput = 0.0f;
     bool handbrakeInput = false;
 
-    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)) throttleInput += 1.0f;
-    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)) throttleInput -= 1.0f;
-    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) turnInput -= 1.0f;
-    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)) turnInput += 1.0f;
-    if (IsKeyDown(KEY_SPACE)) handbrakeInput = true;
+    if (raylib::IsKeyDown(raylib::KEY_W) || raylib::IsKeyDown(raylib::KEY_UP)) throttleInput += 1.0f;
+    if (raylib::IsKeyDown(raylib::KEY_S) || raylib::IsKeyDown(raylib::KEY_DOWN)) throttleInput -= 1.0f;
+    if (raylib::IsKeyDown(raylib::KEY_A) || raylib::IsKeyDown(raylib::KEY_LEFT)) turnInput -= 1.0f;
+    if (raylib::IsKeyDown(raylib::KEY_D) || raylib::IsKeyDown(raylib::KEY_RIGHT)) turnInput += 1.0f;
+    if (raylib::IsKeyDown(raylib::KEY_SPACE)) handbrakeInput = true;
 
-    if (IsKeyPressed(KEY_G)) m_renderState.debugDrawEnabled = !m_renderState.debugDrawEnabled;
+    if (raylib::IsKeyPressed(raylib::KEY_G)) m_renderState.debugDrawEnabled = !m_renderState.debugDrawEnabled;
 
     // m_gameState.getPlayerCar().setInput(throttleInput, turnInput, handbrakeInput);
 }

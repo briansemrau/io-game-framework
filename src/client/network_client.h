@@ -1,7 +1,49 @@
 #ifndef NETWORK_CLIENT_H
 #define NETWORK_CLIENT_H
 
+#include <atomic>
+#include <condition_variable>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <rtc/rtc.hpp>
+#include <thread>
+#include <variant>
+#include <vector>
+#include <cstddef>
+
+#include "game.h"
+
 class NetworkClient {
+public:
+    using Seconds = std::chrono::duration<float, std::ratio<1>>;
+
+    NetworkClient(const Game&);
+    ~NetworkClient();
+
+    NetworkClient(const NetworkClient&) = delete;
+    NetworkClient& operator=(const NetworkClient&) = delete;
+    NetworkClient(NetworkClient&&) = delete;
+    NetworkClient& operator=(NetworkClient&&) = delete;
+
+    void connect(const std::string& serverUrl, uint16_t serverPort);
+    void disconnect();
+    bool isConnected() const;
+
+private:
+    void createPeerConnection(const rtc::Configuration &, std::weak_ptr<rtc::WebSocket>, std::string id);
+    
+    void onStateMessage(std::vector<std::byte>);
+
+    const Game &m_game;
+    
+    std::string m_localID;
+    std::shared_ptr<rtc::PeerConnection> m_peerConnection;
+    std::shared_ptr<rtc::DataChannel> m_testDataChannel;
+    std::shared_ptr<rtc::DataChannel> m_stateDataChannel;
+
+    std::atomic<bool> m_connected{false};
 };
 
-#endif // NETWORK_CLIENT_H
+#endif  // NETWORK_CLIENT_H

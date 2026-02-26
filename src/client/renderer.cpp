@@ -5,40 +5,43 @@
 #include <numbers>
 
 #include "game.h"
+
+namespace raylib {
 #include "raylib.h"
+}
 
 void Renderer::render(const GameState& gameState, const RenderState& renderState) {
     float zoom = 1;
 
-    BeginDrawing();
+    raylib::BeginDrawing();
     {
-        ClearBackground({40, 45, 50, 255});
+        raylib::ClearBackground({40, 45, 50, 255});
 
-        Vector2 screenCenter = {(float)GetScreenWidth() / 2.0f, (float)GetScreenHeight() / 2.0f};
+        raylib::Vector2 screenCenter = {(float)raylib::GetScreenWidth() / 2.0f, (float)raylib::GetScreenHeight() / 2.0f};
 
         float arenaW = Game::ArenaWidth * zoom;
         float arenaH = Game::ArenaHeight * zoom;
 
-        Rectangle arenaRect = {screenCenter.x - arenaW / 2.0f, screenCenter.y - arenaH / 2.0f, arenaW, arenaH};
-        DrawRectangleLinesEx(arenaRect, 4.0f, {80, 90, 100, 255});
+        raylib::Rectangle arenaRect = {screenCenter.x - arenaW / 2.0f, screenCenter.y - arenaH / 2.0f, arenaW, arenaH};
+        raylib::DrawRectangleLinesEx(arenaRect, 4.0f, {80, 90, 100, 255});
 
         float gridSize = 5.0f;
         for (float x = Game::ArenaMinX; x <= Game::ArenaMaxX; x += gridSize) {
-            Vector2 start = {screenCenter.x + x * zoom, screenCenter.y + Game::ArenaMinY * zoom};
-            Vector2 end = {screenCenter.x + x * zoom, screenCenter.y + Game::ArenaMaxY * zoom};
-            DrawLineV(start, end, {50, 55, 60, 100});
+            raylib::Vector2 start = {screenCenter.x + x * zoom, screenCenter.y + Game::ArenaMinY * zoom};
+            raylib::Vector2 end = {screenCenter.x + x * zoom, screenCenter.y + Game::ArenaMaxY * zoom};
+            raylib::DrawLineV(start, end, {50, 55, 60, 100});
         }
         for (float y = Game::ArenaMinY; y <= Game::ArenaMaxY; y += gridSize) {
-            Vector2 start = {screenCenter.x + Game::ArenaMinX * zoom, screenCenter.y + y * zoom};
-            Vector2 end = {screenCenter.x + Game::ArenaMaxX * zoom, screenCenter.y + y * zoom};
-            DrawLineV(start, end, {50, 55, 60, 100});
+            raylib::Vector2 start = {screenCenter.x + Game::ArenaMinX * zoom, screenCenter.y + y * zoom};
+            raylib::Vector2 end = {screenCenter.x + Game::ArenaMaxX * zoom, screenCenter.y + y * zoom};
+            raylib::DrawLineV(start, end, {50, 55, 60, 100});
         }
 
         const char* controls = "WASD/Arrows: Drive | Space: Handbrake | R: Reset | G: Debug | Scroll: Zoom";
-        DrawText(controls, 10, GetScreenHeight() - 30, 20, LIGHTGRAY);
+        raylib::DrawText(controls, 10, raylib::GetScreenHeight() - 30, 20, raylib::LIGHTGRAY);
 
-        DrawFPS(GetScreenWidth() - 100, 10);
-        DrawText(std::format(" {:.2f}", GetFrameTime()).c_str(), GetScreenWidth() - 100, 30, 20, GRAY);
+        raylib::DrawFPS(raylib::GetScreenWidth() - 100, 10);
+        raylib::DrawText(std::format(" {:.2f}", raylib::GetFrameTime()).c_str(), raylib::GetScreenWidth() - 100, 30, 20, raylib::GRAY);
 
         // DrawText(std::format("x: {:.1f} y: {:.1f}", carPos.x, carPos.y).c_str(), GetScreenWidth() - 200, 50, 20, GRAY);
         // DrawText(std::format("Zoom: {:.0f}", zoom).c_str(), GetScreenWidth() - 200, 70, 20, GRAY);
@@ -58,7 +61,7 @@ void Renderer::render(const GameState& gameState, const RenderState& renderState
             // TODO: Implement proper debug draw by passing debugDraw to renderer
         }
     }
-    EndDrawing();
+    raylib::EndDrawing();
 }
 
 // void Renderer::renderCar(const Car& car, Vector2 screenPos, float zoom, Color color) {

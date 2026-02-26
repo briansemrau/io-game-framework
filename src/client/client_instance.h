@@ -7,6 +7,8 @@
 
 class ClientInstance {
 public:
+    ClientInstance();
+
     void run();
 
 private:
@@ -14,6 +16,9 @@ private:
     NetworkClient m_networkClient;
     Renderer m_renderer;
     RenderState m_renderState;
+
+    // TODO: support running P2P server?
+    // NetworkServer *m_networkServer;
 
     void handleInput();
     void step();

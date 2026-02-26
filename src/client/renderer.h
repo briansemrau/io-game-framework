@@ -1,8 +1,6 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "raylib.h"
-
 #include "game.h"
 
 // Data specific to the current window

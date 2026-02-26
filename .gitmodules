@@ -19,3 +19,6 @@
 [submodule "thirdparty/plog"]
 	path = thirdparty/plog
 	url = https://github.com/SergiusTheBest/plog.git
+[submodule "thirdparty/json"]
+	path = thirdparty/json
+	url = https://github.com/nlohmann/json.git
