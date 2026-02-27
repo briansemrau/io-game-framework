@@ -16,7 +16,7 @@ NetworkClient::NetworkClient(const Game& game) : m_game(game) {}
 
 NetworkClient::~NetworkClient() { disconnect(); }
 
-void NetworkClient::connect(const std::string& serverUrl, uint16_t serverPort) {
+void NetworkClient::connect(const std::string& signalServerUrl, uint16_t port) {
     rtc::Configuration config;
 
     // TODO put this in some config file
@@ -28,7 +28,7 @@ void NetworkClient::connect(const std::string& serverUrl, uint16_t serverPort) {
     }
 
     // config.enableIceUdpMux = true; // TODO enable on server
-    m_localID = generateRandomIDStr(32);
+    m_localID = generateRandomPeerID();
     PLOG_DEBUG << "Local ID: " << m_localID;
 
     auto ws = std::make_shared<rtc::WebSocket>();
@@ -53,7 +53,14 @@ void NetworkClient::connect(const std::string& serverUrl, uint16_t serverPort) {
 
         auto it = message.find("id");
         if (it == message.end()) return;
-        auto id = it->get<std::string>();
+        auto id_str = it->get<std::string>();
+        PeerID id;
+        try {
+            id = std::stoull(id_str);
+        } catch (const std::invalid_argument& ia) {
+            PLOG_DEBUG << "Message peer ID is invalid: " << ia.what();
+            return;
+        }
 
         it = message.find("type");
         if (it == message.end()) return;
@@ -79,12 +86,12 @@ void NetworkClient::connect(const std::string& serverUrl, uint16_t serverPort) {
         }
     });
 
-    const std::string url = (serverUrl.find("://") == std::string::npos ? "ws://" : "") + serverUrl + ":" + std::to_string(serverPort) + "/" + m_localID;
+    const std::string url = (signalServerUrl.find("://") == std::string::npos ? "ws://" : "") + signalServerUrl + ":" + std::to_string(port) + "/" + std::to_string(m_localID);
     ws->open(url);
     PLOG_DEBUG << "Waiting for websocket to connect...";
 }
 
-void NetworkClient::createPeerConnection(const rtc::Configuration& config, std::weak_ptr<rtc::WebSocket> wws, std::string id) {
+void NetworkClient::createPeerConnection(const rtc::Configuration& config, std::weak_ptr<rtc::WebSocket> wws, PeerID id) {
     assert(m_peerConnection == nullptr);
 
     m_peerConnection = std::make_shared<rtc::PeerConnection>(config);

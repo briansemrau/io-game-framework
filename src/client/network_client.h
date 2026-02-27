@@ -27,18 +27,18 @@ public:
     NetworkClient(NetworkClient&&) = delete;
     NetworkClient& operator=(NetworkClient&&) = delete;
 
-    void connect(const std::string& serverUrl, uint16_t serverPort);
+    void connect(const std::string& signalServerUrl, uint16_t port);
     void disconnect();
     bool isConnected() const;
 
 private:
-    void createPeerConnection(const rtc::Configuration &, std::weak_ptr<rtc::WebSocket>, std::string id);
+    void createPeerConnection(const rtc::Configuration &, std::weak_ptr<rtc::WebSocket>, PeerID id);
     
     void onStateMessage(std::vector<std::byte>);
 
     const Game &m_game;
     
-    std::string m_localID;
+    PeerID m_localID;
     std::shared_ptr<rtc::PeerConnection> m_peerConnection;
     std::shared_ptr<rtc::DataChannel> m_testDataChannel;
     std::shared_ptr<rtc::DataChannel> m_stateDataChannel;

@@ -5,7 +5,7 @@ AccessModifierOffset: -4
 ColumnLimit: 180
 # AllowShortFunctionsOnASingleLine: Inline
 # DerivePointerAlignment: false
-# PointerAlignment: Right
+PointerAlignment: Right
 # AlignAfterOpenBracket: false
 # AlignArrayOfStructures: AIAS_Right
 # AlignConsecutiveAssignments: false

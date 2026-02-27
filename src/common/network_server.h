@@ -33,6 +33,7 @@
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -42,13 +43,11 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <cstddef>
 
 #include "game.h"
 
 class NetworkServer {
 public:
-    using ClientId = uint32_t;
     using Seconds = std::chrono::duration<float, std::ratio<1>>;
 
     NetworkServer(Game& game);
@@ -64,6 +63,7 @@ public:
     bool isRunning() const;
 
 private:
+    // TODO move to network_common; reuse in network_client
     struct ClientConnection {
         std::string localDescription;
         std::vector<std::string> pendingCandidates;
@@ -72,7 +72,9 @@ private:
         std::shared_ptr<rtc::DataChannel> m_stateDataChannel;
     };
 
-    void startSignaling(uint16_t port);
+    void startSignallingWebsocket(const std::string& signalServerUrl, uint16_t port);
+
+    std::shared_ptr<rtc::PeerConnection> createPeerConnection(const rtc::Configuration &, std::weak_ptr<rtc::WebSocket>, PeerID id);
 
     void run();
 
@@ -83,12 +85,12 @@ private:
     Seconds m_tickPeriod{0.1f};
 
     std::mutex m_clientsMutex;
-    std::unordered_map<ClientId, std::unique_ptr<ClientConnection>> m_clients;
-    std::atomic<ClientId> m_nextClientId{1};
+    std::unordered_map<PeerID, std::unique_ptr<ClientConnection>> m_clients;
+    // std::atomic<PeerID> m_nextClientId{1};
 
     // Tx message queue
     struct OutgoingMessage {
-        ClientId clientId;
+        PeerID clientId;
         std::vector<std::byte> data;
         bool broadcast;
     };
