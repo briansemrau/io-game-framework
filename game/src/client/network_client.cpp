@@ -86,7 +86,7 @@ void NetworkClient::connect(const std::string& signalServerUrl, uint16_t port) {
         }
     });
 
-    const std::string url = (signalServerUrl.find("://") == std::string::npos ? "ws://" : "") + signalServerUrl + ":" + std::to_string(port) + "/" + std::to_string(m_localID);
+    const std::string url = (signalServerUrl.find("://") == std::string::npos ? "ws://" : "") + signalServerUrl + ":" + std::to_string(port) + "/connect/" + std::to_string(m_localID);
     ws->open(url);
     PLOG_DEBUG << "Waiting for websocket to connect...";
 }

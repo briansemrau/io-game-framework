@@ -178,7 +178,7 @@ void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl,
         }
     });
 
-    const std::string url = (signalServerUrl.find("://") == std::string::npos ? "ws://" : "") + signalServerUrl + ":" + std::to_string(port) + "/" + std::to_string(localID);
+    const std::string url = (signalServerUrl.find("://") == std::string::npos ? "ws://" : "") + signalServerUrl + ":" + std::to_string(port) + "/connect/" + std::to_string(localID);
     ws->open(url);
     PLOG_DEBUG << "Waiting for websocket to connect...";
     // wsPromise.get_future();
