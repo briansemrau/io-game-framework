@@ -1,24 +1,24 @@
 [submodule "thirdparty/raylib"]
-	path = thirdparty/raylib
+	path = game/thirdparty/raylib
 	url = https://github.com/raysan5/raylib
 [submodule "thirdparty/box2d"]
-	path = thirdparty/box2d
+	path = game/thirdparty/box2d
 	url = https://github.com/erincatto/box2d
 [submodule "thirdparty/entt"]
-	path = thirdparty/entt
+	path = game/thirdparty/entt
 	url = https://github.com/skypjack/entt.git
 [submodule "thirdparty/libdatachannel"]
-	path = thirdparty/libdatachannel
+	path = game/thirdparty/libdatachannel
 	url = https://github.com/paullouisageneau/libdatachannel.git
 [submodule "thirdparty/zpp_bits"]
-	path = thirdparty/zpp_bits
+	path = game/thirdparty/zpp_bits
 	url = https://github.com/eyalz800/zpp_bits.git
 [submodule "thirdparty/datachannel-wasm"]
-	path = thirdparty/datachannel-wasm
+	path = game/thirdparty/datachannel-wasm
 	url = https://github.com/paullouisageneau/datachannel-wasm.git
 [submodule "thirdparty/plog"]
-	path = thirdparty/plog
+	path = game/thirdparty/plog
 	url = https://github.com/SergiusTheBest/plog.git
 [submodule "thirdparty/json"]
-	path = thirdparty/json
+	path = game/thirdparty/json
 	url = https://github.com/nlohmann/json.git

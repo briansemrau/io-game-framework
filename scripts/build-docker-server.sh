@@ -9,7 +9,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 fi
 
 CONFIG="${1:-release}"
-DOCKERFILE="Dockerfile.game-server"
+DOCKERFILE="game/Dockerfile.game-server"
 IMAGE_NAME="game-server:${CONFIG}"
 
 echo "Building Game Server Docker image ($CONFIG)..."

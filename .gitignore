@@ -76,5 +76,5 @@ android.*
 *.wasm
 *.html
 *.js
-!src/minshell.html
-!src/shell.html
+!*/src/**/minshell.html
+!*/src/**/shell.html

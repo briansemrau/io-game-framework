@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(destruction_derby LANGUAGES CXX)
+project(io-game-framework LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -9,24 +9,24 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Dependencies - platform-agnostic
-add_subdirectory(thirdparty/plog)
+add_subdirectory(game/thirdparty/plog)
 set(JSON_BuildTests OFF CACHE INTERNAL "")
-add_subdirectory(thirdparty/json)
-add_subdirectory(thirdparty/box2d)
-add_subdirectory(thirdparty/entt)
-add_subdirectory(thirdparty/raylib)
+add_subdirectory(game/thirdparty/json)
+add_subdirectory(game/thirdparty/box2d)
+add_subdirectory(game/thirdparty/entt)
+add_subdirectory(game/thirdparty/raylib)
 
 # Networking - platform-specific
 if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
-    add_subdirectory(thirdparty/datachannel-wasm)
+    add_subdirectory(game/thirdparty/datachannel-wasm)
 else()
     set(NO_MEDIA ON CACHE BOOL "" FORCE)
     set(NO_EXAMPLES ON CACHE BOOL "" FORCE)
     set(NO_TESTS ON CACHE BOOL "" FORCE)
     set(USE_SYSTEM_PLOG ON CACHE BOOL "" FORCE)
     set(USE_SYSTEM_JSON ON CACHE BOOL "" FORCE)
-    set(plog_INCLUDE_DIR thirdparty/plog/include)
-    add_subdirectory(thirdparty/libdatachannel)
+    set(plog_INCLUDE_DIR game/thirdparty/plog/include)
+    add_subdirectory(game/thirdparty/libdatachannel)
 endif()
 
 # Transport abstraction layer
@@ -58,29 +58,29 @@ if(ENABLE_ASAN)
 endif()
 
 # Shared sources
-file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS src/common/*.cpp)
+file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS game/src/common/*.cpp)
 
 add_library(common STATIC ${COMMON_SOURCES})
 
 target_link_libraries(common PUBLIC plog::plog nlohmann_json::nlohmann_json transport box2d)
-target_include_directories(common PUBLIC thirdparty/zpp_bits)
+target_include_directories(common PUBLIC game/thirdparty/zpp_bits)
 
 target_include_directories(common PUBLIC
     # ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/src/common
+    ${CMAKE_SOURCE_DIR}/game/src/common
 )
 
 target_compile_options(common PRIVATE ${COMPILE_OPTIONS})
 
 # Client
-file(GLOB_RECURSE CLIENT_SOURCES CONFIGURE_DEPENDS src/client/*.cpp)
+file(GLOB_RECURSE CLIENT_SOURCES CONFIGURE_DEPENDS game/src/client/*.cpp)
 
 add_executable(client ${CLIENT_SOURCES})
 
 target_link_libraries(client PRIVATE common raylib)
 
 target_include_directories(client PRIVATE
-    ${CMAKE_SOURCE_DIR}/src/client
+    ${CMAKE_SOURCE_DIR}/game/src/client
 )
 
 target_compile_options(client PRIVATE ${COMPILE_OPTIONS})
@@ -97,7 +97,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
         "-sASYNCIFY"
         "-sALLOW_MEMORY_GROWTH=1"
         "--preload-file resources"
-        "--shell-file=${CMAKE_SOURCE_DIR}/src/client/minshell.html"
+        "--shell-file=${CMAKE_SOURCE_DIR}/game/src/client/minshell.html"
     )
 elseif(APPLE)
     target_link_libraries(client PRIVATE
@@ -108,14 +108,14 @@ elseif(APPLE)
 endif()
 
 # Server
-file(GLOB_RECURSE SERVER_SOURCES CONFIGURE_DEPENDS src/server/*.cpp)
+file(GLOB_RECURSE SERVER_SOURCES CONFIGURE_DEPENDS game/src/server/*.cpp)
 
 add_executable(server ${SERVER_SOURCES})
 
 target_link_libraries(server PRIVATE common)
 
 target_include_directories(server PRIVATE
-    ${CMAKE_SOURCE_DIR}/src/server
+    ${CMAKE_SOURCE_DIR}/game/src/server
 )
 
 target_compile_options(server PRIVATE ${COMPILE_OPTIONS})

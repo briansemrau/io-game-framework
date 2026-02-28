@@ -22,11 +22,11 @@ void ClientInstance::run() {
     constexpr int screenWidth = 1280;
     constexpr int screenHeight = 720;
 
-    raylib::InitWindow(screenWidth, screenHeight, "Destruction Derby");
+    raylib::InitWindow(screenWidth, screenHeight, "Test Game");
     raylib::SetWindowState(raylib::FLAG_WINDOW_RESIZABLE);
     raylib::SetTargetFPS(raylib::GetMonitorRefreshRate(raylib::GetCurrentMonitor()));
 
-    raylib::SetWindowTitle("Destruction Derby");
+    raylib::SetWindowTitle("Test Game");
 
     m_networkClient.connect("localhost", 9812);
 
