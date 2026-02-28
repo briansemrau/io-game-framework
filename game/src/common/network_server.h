@@ -86,6 +86,8 @@ private:
     std::thread m_networkThread;
     Seconds m_tickPeriod{0.1f};
 
+    std::shared_ptr<rtc::WebSocket> m_signallingWebsocket;
+
     std::mutex m_clientsMutex;
     std::unordered_map<PeerID, std::unique_ptr<ClientConnection>> m_clients;
     // std::atomic<PeerID> m_nextClientId{1};

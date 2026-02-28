@@ -19,4 +19,4 @@ docker build -f "$DOCKERFILE" \
     .
 
 echo "Signalling Server build complete!"
-echo "To run: docker run -p 9812:8080 -it $IMAGE_NAME -d"
+echo "To run: docker run -p 9812:8080 -d -it $IMAGE_NAME"

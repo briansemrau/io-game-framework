@@ -1,5 +1,7 @@
 #include "server_instance.h"
 
+#include <plog/Log.h>
+
 #include <algorithm>
 #include <chrono>
 #include <deque>
@@ -9,21 +11,24 @@
 
 using Seconds = std::chrono::duration<float, std::ratio<1>>;
 
-ServerInstance::ServerInstance() : m_networkServer(m_game) {
-    // TODO
-}
+ServerInstance::ServerInstance() : m_networkServer(m_game) { PLOG_DEBUG << "Constructor called"; }
 
 void ServerInstance::run() {
+    PLOG_DEBUG << "Starting server instance";
+
     std::deque<Seconds> stepDurationRecord{};
     float timescale = 1.0;  // For slowing down under heavy server load
 
     // TODO implement network thread
     // Will copy game state to network thread to process what to send to each client
     // Network thread will only ever carry one game state. Main thread will only queue state if network thread is waiting and network timestep (0.1s?) is elapsed.
+    PLOG_DEBUG << "Starting network server";
     m_networkServer.start();
+    PLOG_DEBUG << "Network server started";
 
     auto previousTime = std::chrono::steady_clock::now();
     auto remainingTime = Seconds::zero();
+    PLOG_DEBUG << "Main game loop started";
     while (true) {
         // The sands of time
         const auto currentTime = std::chrono::steady_clock::now();
@@ -35,7 +40,7 @@ void ServerInstance::run() {
         // TODO brian: check if we are commanded to stop from a command server?
         // will need separate networking command control thread maybe
         if (m_killFlag.load()) {
-            // TODO logging
+            PLOG_DEBUG << "Kill flag set, exiting game loop.";
             break;
         }
 
@@ -71,8 +76,13 @@ void ServerInstance::run() {
             std::this_thread::sleep_for(sleepTime);
         }
     }
+
+    PLOG_DEBUG << "Game loop exited";
 }
 
-void ServerInstance::stop() { m_killFlag.store(true); }
+void ServerInstance::stop() {
+    PLOG_DEBUG << "Called, setting kill flag";
+    m_killFlag.store(true);
+}
 
 void ServerInstance::step() { m_game.step(); }

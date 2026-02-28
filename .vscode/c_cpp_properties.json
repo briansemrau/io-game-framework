@@ -3,14 +3,14 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/src/**",
-                "${workspaceFolder}/thirdparty/box2d/**",
-                "${workspaceFolder}/thirdparty/entt/**",
-                "${workspaceFolder}/thirdparty/json/**",
-                "${workspaceFolder}/thirdparty/libdatachannel/**",
-                "${workspaceFolder}/thirdparty/plog/**",
-                "${workspaceFolder}/thirdparty/raylib/**",
-                "${workspaceFolder}/thirdparty/zpp_bits/**"
+                "${workspaceFolder}/game/src/**",
+                "${workspaceFolder}/game/thirdparty/box2d/**",
+                "${workspaceFolder}/game/thirdparty/entt/**",
+                "${workspaceFolder}/game/thirdparty/json/**",
+                "${workspaceFolder}/game/thirdparty/libdatachannel/**",
+                "${workspaceFolder}/game/thirdparty/plog/**",
+                "${workspaceFolder}/game/thirdparty/raylib/**",
+                "${workspaceFolder}/game/thirdparty/zpp_bits/**"
             ],
             "defines": [
                 "_DEBUG",
