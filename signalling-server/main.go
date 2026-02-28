@@ -25,11 +25,25 @@ type Message struct {
 	Mid         string `json:"mid,omitempty"`
 }
 
+const (
+	MsgTypeOffer        = "offer"
+	MsgTypeAnswer       = "answer"
+	MsgTypeICECandidate = "ice-candidate"
+)
+
+func validateMessageType(t string) bool {
+	switch t {
+	case MsgTypeOffer, MsgTypeAnswer, MsgTypeICECandidate:
+		return true
+	default:
+		return false
+	}
+}
+
 type PeerManager struct {
 	mu       sync.RWMutex
 	conns    map[string]*websocket.Conn
 	maxConns int
-	current  int
 }
 
 func NewPeerManager(maxConns int) *PeerManager {
@@ -43,14 +57,11 @@ func (pm *PeerManager) Register(id string, c *websocket.Conn) error {
 	pm.mu.Lock()
 	defer pm.mu.Unlock()
 
-	if _, ok := pm.conns[id]; ok {
-		pm.current--
-	} else if pm.maxConns > 0 && pm.current >= pm.maxConns {
+	if pm.maxConns > 0 && len(pm.conns) >= pm.maxConns {
 		return os.ErrExist
 	}
 
 	pm.conns[id] = c
-	pm.current++
 	return nil
 }
 
@@ -60,8 +71,9 @@ func (pm *PeerManager) Unregister(id string) {
 
 	if conn, ok := pm.conns[id]; ok {
 		delete(pm.conns, id)
-		pm.current--
 		conn.Close()
+	} else {
+		log.Printf("Attempted to unregister nonexistent id: %s", id)
 	}
 }
 
@@ -76,7 +88,7 @@ func (pm *PeerManager) Get(id string) (*websocket.Conn, bool) {
 func (pm *PeerManager) Len() int {
 	pm.mu.RLock()
 	defer pm.mu.RUnlock()
-	return pm.current
+	return len(pm.conns)
 }
 
 func newUpgrader() websocket.Upgrader {
@@ -84,13 +96,13 @@ func newUpgrader() websocket.Upgrader {
 	if len(allowedOrigins) == 0 || (len(allowedOrigins) == 1 && allowedOrigins[0] == "") {
 		return websocket.Upgrader{
 			CheckOrigin:     func(r *http.Request) bool { return true },
-			ReadBufferSize:  1024,
-			WriteBufferSize: 1024,
+			ReadBufferSize:  0, // use default
+			WriteBufferSize: 0,
 		}
 	}
 	return websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
+		ReadBufferSize:  0, // use default
+		WriteBufferSize: 0,
 		CheckOrigin: func(r *http.Request) bool {
 			origin := r.Header.Get("Origin")
 			for _, o := range allowedOrigins {
@@ -113,20 +125,18 @@ func wsHandler(pm *PeerManager) http.HandlerFunc {
 			return
 		}
 
-		if err := pm.Register(id, nil); err != nil {
-			http.Error(w, "server at capacity", http.StatusTooManyRequests)
-			return
-		}
-
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			pm.Unregister(id)
 			log.Printf("upgrade error for %s: %v", id, err)
+			http.Error(w, "upgrade failed", http.StatusInternalServerError)
 			return
 		}
 
 		defer conn.Close()
-		pm.Register(id, conn)
+		if err := pm.Register(id, conn); err != nil {
+			log.Printf("registration failed for %s: %v", id, err)
+			return
+		}
 		defer pm.Unregister(id)
 
 		conn.SetPongHandler(func(string) error { return nil })
@@ -151,8 +161,8 @@ func wsHandler(pm *PeerManager) http.HandlerFunc {
 				continue
 			}
 
-			if msg.Type == "" {
-				log.Printf("missing type (%s)", id)
+			if !validateMessageType(msg.Type) {
+				log.Printf("invalid message type (%s): %s", id, msg.Type)
 				continue
 			}
 
@@ -178,6 +188,9 @@ func wsHandler(pm *PeerManager) http.HandlerFunc {
 func main() {
 	addr := flag.String("addr", ":8080", "host:port for signalling server")
 	maxConns := flag.Int("max-connections", 0, "maximum concurrent connections (0 = unlimited)")
+	tls := flag.Bool("tls", false, "enable TLS")
+	cert := flag.String("cert", "", "path to TLS certificate file")
+	key := flag.String("key", "", "path to TLS key file")
 	flag.Parse()
 
 	pm := NewPeerManager(*maxConns)
@@ -193,7 +206,7 @@ func main() {
 		fmt.Fprintf(w, `{"connections":%d}`, pm.Len())
 	})
 
-	http.HandleFunc("/", wsHandler(pm))
+	http.HandleFunc("/connect/", wsHandler(pm))
 
 	srv := &http.Server{Addr: *addr}
 
@@ -221,7 +234,17 @@ func main() {
 	}()
 
 	log.Printf("signalling server listening on %s", *addr)
-	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+
+	var err error
+	if *tls {
+		if *cert == "" || *key == "" {
+			log.Fatal("TLS requires both -cert and -key flags")
+		}
+		err = srv.ListenAndServeTLS(*cert, *key)
+	} else {
+		err = srv.ListenAndServe()
+	}
+	if err != nil && err != http.ErrServerClosed {
 		log.Fatalf("listen failed: %v", err)
 	}
 }

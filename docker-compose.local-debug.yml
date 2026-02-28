@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  signalling-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.signalling
+    ports:
+      - "8080:8080"
+    environment:
+      - LOG_LEVEL=info
+    networks:
+      - service-network
+
+  game-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.game-server
+      args:
+        - BUILD_TYPE=debug
+    environment:
+      - SIGNALING_URL=signalling-server:8080
+    depends_on:
+      - signalling-server
+    networks:
+      - service-network
+
+networks:
+  service-network:
+    driver: bridge

@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -11,9 +12,9 @@
 #include <thread>
 #include <variant>
 #include <vector>
-#include <cstddef>
 
 #include "game.h"
+#include "network_common.h"
 
 class NetworkClient {
 public:
@@ -33,11 +34,11 @@ public:
 
 private:
     void createPeerConnection(const rtc::Configuration &, std::weak_ptr<rtc::WebSocket>, PeerID id);
-    
+
     void onStateMessage(std::vector<std::byte>);
 
     const Game &m_game;
-    
+
     PeerID m_localID;
     std::shared_ptr<rtc::PeerConnection> m_peerConnection;
     std::shared_ptr<rtc::DataChannel> m_testDataChannel;

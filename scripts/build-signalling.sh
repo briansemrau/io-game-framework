@@ -1,26 +1,22 @@
 #!/bin/bash
 set -e
 
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    echo "Usage: $0 [release|debug]"
+    echo "  release - optimized build (default)"
+    echo "  debug   - unoptimized build with debug symbols"
+    exit 0
+fi
+
 CONFIG="${1:-release}"
-OUTPUT_DIR="out/signalling-server-$CONFIG"
-IMAGE_NAME="signalling-server-build"
+DOCKERFILE="Dockerfile.signalling"
+IMAGE_NAME="signalling-server:latest"
 
-echo "Building Signalling Server ($CONFIG) in Docker..."
+echo "Building Signalling Server ($CONFIG)..."
 
-# Ensure output directory exists
-mkdir -p "$OUTPUT_DIR"
-
-# Build using Docker's builder stage (same as production)
-docker build -f Dockerfile.signalling \
-    --target builder \
+docker build -f "$DOCKERFILE" \
     -t "$IMAGE_NAME" \
     .
 
-# Extract binary from container
-docker run --rm --entrypoint cat "$IMAGE_NAME" /build/signalling-server > "$OUTPUT_DIR/signalling-server"
-
-chmod +x "$OUTPUT_DIR/signalling-server"
-
-echo "Signalling Server build complete! Output: $OUTPUT_DIR/signalling-server"
-echo "To run: docker run -p 8080:8080 -it signalling-server:latest"
-echo "To build full image: docker build -f Dockerfile.signalling -t signalling-server:latest ."
+echo "Signalling Server build complete!"
+echo "To run: docker run -p 8080:8080 -it $IMAGE_NAME -d

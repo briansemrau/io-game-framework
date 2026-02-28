@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Signalling Server
 # Stage 1: Build
-FROM golang:1.25-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 WORKDIR /build
 
@@ -12,7 +12,7 @@ COPY signalling-server/go.mod signalling-server/go.sum* ./
 RUN go mod download || true
 
 # Copy source and build
-COPY signalling/. .
+COPY signalling-server/. .
 RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o signalling-server .
 
 # Stage 2: Runtime

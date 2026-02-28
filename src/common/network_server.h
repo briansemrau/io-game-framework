@@ -44,6 +44,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "network_common.h"
+
 #include "game.h"
 
 class NetworkServer {

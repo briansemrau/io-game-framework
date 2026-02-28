@@ -3,12 +3,11 @@
 #include <plog/Log.h>
 
 #include <chrono>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <mutex>
 #include <nlohmann/json.hpp>
-
-#include "network_common.h"
 
 NetworkServer::NetworkServer(Game& game) : m_game(game) {}
 
@@ -205,10 +204,20 @@ std::shared_ptr<rtc::PeerConnection> NetworkServer::createPeerConnection(const r
         // Only the server sets up datachannels
         PLOG_DEBUG << "Unexpected DataChannel from " << id << " received with label \"" << dc->label() << "\"";
     });
+
+    return pc;
 }
 
 void NetworkServer::run() {
-    startSignallingWebsocket("localhost", 9812);
+    const char* signallingUrlEnv = std::getenv("SIGNALING_URL");
+    std::string signallingUrl = signallingUrlEnv ? signallingUrlEnv : "localhost:9812";
+
+    size_t colonPos = signallingUrl.find(':');
+    std::string host = signallingUrl.substr(0, colonPos);
+    uint16_t port = static_cast<uint16_t>(std::stoi(signallingUrl.substr(colonPos + 1)));
+
+    PLOG_DEBUG << "Connecting to signalling server at " << host << ":" << port;
+    startSignallingWebsocket(host, port);
 
     auto previousTime = std::chrono::steady_clock::now();
     auto remainingTime = Seconds::zero();
