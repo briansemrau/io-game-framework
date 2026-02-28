@@ -1,12 +1,84 @@
-# AGENTS.md - Development Guidelines for Spite Project
+# AGENTS.md - Development Guidelines for io-game-framework
 
 ## Overview
 
-This is a C++23 server-authoritative multiplayer game demo using [raylib](https://www.raylib.com/) for the client and [box2d](https://box2d.org/) for physics. The project builds two executables: `client` (graphics + input) and `server` (physics simulation). Communication is done using WebRTC Data Channels, compressed using (dependency trade study incomplete), and serialized using zpp::bits.
+This is a C++23 server-authoritative multiplayer game demo.
 
 The goal is to create a clean prototype demonstrating pristine design. The architecture is designed to be **extensible and reusable** for future projects.
 
 **Design philosophy**: Simple, clean code first. Abstraction only when needed for extensibility. Build a solid foundation that can grow.
+
+## Deployable Components
+
+| Component | Location | Description |
+|-----------|----------|-------------|
+| **client** | `game/src/client/` | Desktop/WASM executable with graphics (raylib), input handling, and predictive simulation |
+| **server** | `game/src/server/` | Headless simulation server |
+| **signalling-server** | `signalling-server/` | Go WebSocket relay for WebRTC peer handshake |
+| **Dockerfiles** | `game/Dockerfile.game-server`, `signalling-server/Dockerfile.signalling` | Container images for server deployment |
+
+## Project Structure
+
+```
+game/
+  src/
+    client/     - Client executable code (graphics, input)
+    common/     - Shared code (game state, systems, networking)
+    server/     - Server executable code (no graphics or input)
+  thirdparty/   - Third party dependencies (git submodules, do not edit)
+  Dockerfile.game-server
+scripts/        - Build scripts for various platforms
+docs/           - Architecture documentation
+infra/          - Infrastructure as code (docker-compose, etc.)
+signalling-server/  - Go-based WebRTC signalling server
+```
+
+## Build System
+
+- **CMake 3.25+** with **Ninja Multi-Config** generator
+- **C++23** standard (strict, no extensions)
+- Uses `CMakePresets.json` for platform-specific configurations
+
+### Platforms
+
+| Platform | Client | Server | Preset |
+|----------|--------|--------|--------|
+| **Windows (MSVC)** | ✅ | ✅ | `windows-client-debug`, `windows-server-debug` |
+| **Linux (Clang)** | ✅ | ✅ | `linux-client-debug`, `linux-server-debug` |
+| **WASM (Emscripten)** | ✅ | ❌ | `wasm-client-debug` |
+
+### Build Commands
+
+```bash
+# Configure
+cmake --preset <preset-name>
+
+# Build
+cmake --build --preset <preset-name>
+```
+
+### Scripts
+
+- `scripts/build.sh` - Linux server + WASM client
+- `scripts/build-linux-{client,server}.sh` - Linux native builds
+- `scripts/build-windows-msvc-{client,server}.ps1` - Windows MSVC builds
+- `scripts/build-wasm-client.sh` - WebAssembly client
+- `scripts/build-docker-{server,all}.sh` - Docker images
+
+## Dependencies
+
+| Dependency | Type | Purpose |
+|------------|------|---------|
+| **raylib** | Compiled | Client graphics/window management |
+| **box2d** | Compiled | Physics simulation (C API) |
+| **entt** | Header-only | Entity-component system |
+| **libdatachannel** | Compiled | WebRTC (native) |
+| **datachannel-wasm** | Header-only | WebRTC (WASM) |
+| **zpp_bits** | Header-only | Binary serialization |
+| **nlohmann/json** | Header-only | JSON parsing |
+| **plog** | Header-only | Logging |
+
+A third party library for compression will be required in the future.
 
 ## Architectural Principles
 
@@ -16,17 +88,7 @@ The goal is to create a clean prototype demonstrating pristine design. The archi
 - **Intentional architecture** - Explicit is better than implicit. Boundaries between systems should be clear, not accidental.
 - **No shortcuts** - Code written today is code you'll maintain forever.
 
-## Project Structure
-```
-src/
-  client/     - Client executable code (graphics, input)
-  common/     - Shared code (game state, systems, physics)
-  server/     - Server executable code (no graphics or input)
-thirdparty/   - Third party dependencies (do not edit)
-scripts/      - All project build scripts
-```
-
-## Code Style Guidelines
+## Code Style
 
 As a baseline, use the Google C++ Style Guide (https://google.github.io/styleguide/cppguide.html)
 
@@ -36,16 +98,46 @@ Our exceptions to the Google style guide include:
 
 Don't assume that the code you're editing correctly follows the style. This should be identified when asked to code review.
 
-## Dependencies
-- **raylib**: Client-side graphics and window management
-- **box2d**: Physics simulation (C API version, `b2WorldId`, `b2BodyId`, etc.)
-- **entt**: Entity component system
-- **libdatachannel** and **datachannel-wasm**: WebRTC/networking transport
-- **zpp_bits**: Binary serialization for transport
-
 ## Testing
-There are no automated tests in the main build. This will need to be improved. Considering using Google Test.
+
+There are no automated tests in the main build. This will need to be improved.
+
+**Recommendation**: Use Google Test (gtest). Add to `CMakeLists.txt`:
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/refs/heads/main.zip
+)
+FetchContent_MakeAvailable(googletest)
+include(GoogleTest)
+```
+
+Then create tests in `game/tests/` and add with `add_test()` and `gtest_discover_tests()`.
 
 ## Git Workflow
+
 Do not create git commits. You may view status, but the user is in control of the git history.
+
 The only exception to this rule is on "*-freeform" branches. You may never switch branches, but you may commit and revert in a *-freeform branch. The user will typically prompt you to use git in these situations.
+
+## Deployment
+
+### Docker
+
+```bash
+# Build all images
+bash scripts/build-docker-all.sh [release|debug]
+
+# Run local development
+docker-compose -f infra/docker-compose.local-debug.yml up -d
+```
+
+### Environment Variables
+
+- `SIGNALING_URL` - WebRTC signalling server URL (default: `localhost:8080`)
+
+## Additional Documentation
+
+- `docs/network_architecture.md` - Detailed network architecture with rollback resimulation design
+- `infra/README.md` - Infrastructure notes
