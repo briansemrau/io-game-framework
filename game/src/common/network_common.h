@@ -4,7 +4,7 @@
 #include <string>
 
 static constexpr auto TEST_DATACHANNEL = "test";
-static constexpr auto DEFAULT_DATACHANNEL = "default";
+static constexpr auto STATE_DATACHANNEL = "state";
 
 extern std::string generateRandomIDStr(size_t length);
 

@@ -44,9 +44,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "network_common.h"
-
 #include "game.h"
+#include "network_common.h"
 
 class NetworkServer {
 public:
@@ -70,17 +69,17 @@ private:
         std::string localDescription;
         std::vector<std::string> pendingCandidates;
         std::shared_ptr<rtc::PeerConnection> peerConnection;
-        std::shared_ptr<rtc::DataChannel> m_testDataChannel;
-        std::shared_ptr<rtc::DataChannel> m_stateDataChannel;
+        std::shared_ptr<rtc::DataChannel> testDataChannel;
+        std::shared_ptr<rtc::DataChannel> stateDataChannel;
     };
 
     void startSignallingWebsocket(const std::string& signalServerUrl, uint16_t port);
 
-    std::shared_ptr<rtc::PeerConnection> createPeerConnection(const rtc::Configuration &, std::weak_ptr<rtc::WebSocket>, PeerID id);
+    void createClientConnection(const rtc::Configuration&, std::weak_ptr<rtc::WebSocket>, PeerID id);
 
     void run();
 
-    const Game &m_game;
+    const Game& m_game;
 
     std::atomic<bool> m_running{false};
     std::thread m_networkThread;

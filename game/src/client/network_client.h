@@ -28,16 +28,18 @@ public:
     NetworkClient(NetworkClient&&) = delete;
     NetworkClient& operator=(NetworkClient&&) = delete;
 
-    void connect(const std::string& signalServerUrl, uint16_t port);
+    void connect(const std::string& signalServerUrl, uint16_t port, PeerID serverID);
     void disconnect();
     bool isConnected() const;
 
 private:
-    void createPeerConnection(const rtc::Configuration &, std::weak_ptr<rtc::WebSocket>, PeerID id);
+    // TODO: P2P capability - uncomment when ready to support client-to-client connections
+    // void createPeerConnection(const rtc::Configuration&, std::weak_ptr<rtc::WebSocket>, PeerID id);
+    void startServerConnection(std::shared_ptr<rtc::WebSocket> ws, PeerID serverID, rtc::Configuration config);
 
     void onStateMessage(std::vector<std::byte>);
 
-    const Game &m_game;
+    const Game& m_game;
 
     PeerID m_localID;
     std::shared_ptr<rtc::PeerConnection> m_peerConnection;

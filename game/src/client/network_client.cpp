@@ -19,8 +19,8 @@ NetworkClient::~NetworkClient() {
     disconnect();
 }
 
-void NetworkClient::connect(const std::string& signalServerUrl, uint16_t port) {
-    PLOG_DEBUG << "Connecting to signalling server " << signalServerUrl << ":" << port;
+void NetworkClient::connect(const std::string& signalServerUrl, uint16_t port, PeerID serverID) {
+    PLOG_DEBUG << "Connecting to signalling server " << signalServerUrl << ":" << port << " to reach server " << serverID;
 
     rtc::Configuration config;
     PLOG_DEBUG << "Created rtc::Configuration";
@@ -43,12 +43,17 @@ void NetworkClient::connect(const std::string& signalServerUrl, uint16_t port) {
     std::promise<void> wsPromise;
     auto wsFuture = wsPromise.get_future();
 
-    ws->onOpen([&wsPromise, localID = m_localID]() {
+    ws->onOpen([this, &wsPromise, localID = m_localID, ws, serverID, config]() mutable {
         PLOG_DEBUG << "WebSocket connected for client (localID=" << localID << ")";
+
+        nlohmann::json registerMsg = {{"id", std::to_string(localID)}, {"type", "register"}, {"role", "client"}};
+        ws->send(registerMsg.dump());
+        PLOG_DEBUG << "Sent registration message for client " << localID;
+
         wsPromise.set_value();
     });
     ws->onError([&wsPromise, localID = m_localID](std::string s) {
-        PLOG_ERROR << "[WebSocket.onError] WebSocket error for client (localID=" << localID << "): " << s;
+        PLOG_ERROR << "WebSocket error for client (localID=" << localID << "): " << s;
         wsPromise.set_exception(std::make_exception_ptr(std::runtime_error(s)));
     });
     ws->onClosed([localID = m_localID]() { PLOG_DEBUG << "WebSocket closed for client (localID=" << localID << ")"; });
@@ -67,7 +72,7 @@ void NetworkClient::connect(const std::string& signalServerUrl, uint16_t port) {
             message = nlohmann::json::parse(rawData);
             PLOG_DEBUG << "Parsed JSON successfully";
         } catch (const std::exception& e) {
-            PLOG_ERROR << "[WebSocket.onMessage] Failed to parse JSON: " << e.what();
+            PLOG_ERROR << "Failed to parse JSON: " << e.what();
             return;
         }
 
@@ -84,7 +89,7 @@ void NetworkClient::connect(const std::string& signalServerUrl, uint16_t port) {
             id = std::stoull(id_str);
             PLOG_DEBUG << "Parsed peer ID: " << id;
         } catch (const std::invalid_argument& ia) {
-            PLOG_ERROR << "[WebSocket.onMessage] Message peer ID is invalid: " << ia.what() << " (value: " << id_str << ")";
+            PLOG_ERROR << "Message peer ID is invalid: " << ia.what() << " (value: " << id_str << ")";
             return;
         }
 
@@ -99,10 +104,12 @@ void NetworkClient::connect(const std::string& signalServerUrl, uint16_t port) {
         if (m_peerConnection != nullptr) {
             PLOG_DEBUG << "Peer connection already exists, ignoring message type=" << type;
         } else if (!m_peerConnection && type == "offer") {
-            PLOG_DEBUG << "Received 'offer' from peer " << id << ", creating peer connection";
-            createPeerConnection(config, wws, id);
+            // TODO: P2P capability - enable when ready to support client-to-client connections
+            // PLOG_DEBUG << "Received 'offer' from peer " << id << ", creating peer connection";
+            // createPeerConnection(config, wws, id);
+            PLOG_DEBUG << "Received 'offer' from peer " << id << ", ignoring (P2P disabled)";
         } else {
-            PLOG_ERROR << "[WebSocket.onMessage] No peer connection exists and type is " << type;
+            PLOG_ERROR << "No peer connection exists and type is " << type;
             return;
         }
 
@@ -127,8 +134,13 @@ void NetworkClient::connect(const std::string& signalServerUrl, uint16_t port) {
     PLOG_DEBUG << "Opening WebSocket to: " << url;
     ws->open(url);
     PLOG_DEBUG << "WebSocket open() called, waiting for connection...";
+    wsFuture.get();
+    // Initiate connection to server by creating an offer
+    startServerConnection(ws, serverID, std::move(config));
 }
 
+// TODO: P2P capability - uncomment when ready to support client-to-client connections
+/*
 void NetworkClient::createPeerConnection(const rtc::Configuration& config, std::weak_ptr<rtc::WebSocket> wws, PeerID id) {
     PLOG_DEBUG << "Creating peer connection for peer ID " << id;
     assert(m_peerConnection == nullptr);
@@ -137,8 +149,7 @@ void NetworkClient::createPeerConnection(const rtc::Configuration& config, std::
     PLOG_DEBUG << "Created rtc::PeerConnection object";
 
     m_peerConnection->onStateChange([id](rtc::PeerConnection::State state) { PLOG_DEBUG << "Peer " << id << " state changed to: " << state; });
-    m_peerConnection->onGatheringStateChange(
-        [id](rtc::PeerConnection::GatheringState state) { PLOG_DEBUG << "Peer " << id << " ICE gathering state: " << state; });
+    m_peerConnection->onGatheringStateChange([id](rtc::PeerConnection::GatheringState state) { PLOG_DEBUG << "Peer " << id << " ICE gathering state: " << state; });
     m_peerConnection->onLocalDescription([wws, id](rtc::Description description) {
         PLOG_DEBUG << "Peer " << id << " generated local " << description.typeString() << " (" << std::string(description).size() << " bytes)";
         nlohmann::json message = {{"id", id}, {"type", description.typeString()}, {"description", std::string(description)}};
@@ -146,7 +157,7 @@ void NetworkClient::createPeerConnection(const rtc::Configuration& config, std::
             PLOG_DEBUG << "Sending " << description.typeString() << " via websocket";
             ws->send(message.dump());
         } else {
-            PLOG_ERROR << "[PeerConnection.onLocalDescription] WebSocket is closed, cannot send " << description.typeString();
+            PLOG_ERROR << "WebSocket is closed, cannot send " << description.typeString();
         }
     });
     m_peerConnection->onLocalCandidate([wws, id](rtc::Candidate candidate) {
@@ -155,7 +166,7 @@ void NetworkClient::createPeerConnection(const rtc::Configuration& config, std::
         if (auto ws = wws.lock()) {
             ws->send(message.dump());
         } else {
-            PLOG_ERROR << "[PeerConnection.onLocalCandidate] WebSocket is closed, cannot send candidate";
+            PLOG_ERROR << "WebSocket is closed, cannot send candidate";
         }
     });
 
@@ -205,6 +216,7 @@ void NetworkClient::createPeerConnection(const rtc::Configuration& config, std::
     m_peerConnection->createAnswer();
     PLOG_DEBUG << "Successfully created peer connection for peer ID " << id;
 }
+*/
 
 void NetworkClient::onStateMessage(std::vector<std::byte> data) {
     // TODO
@@ -229,4 +241,54 @@ bool NetworkClient::isConnected() const {
     bool connected = m_peerConnection != nullptr && m_peerConnection->state() == rtc::PeerConnection::State::Connected;
     PLOG_DEBUG << "Check result: " << (connected ? "true" : "false");
     return connected;
+}
+
+void NetworkClient::startServerConnection(std::shared_ptr<rtc::WebSocket> ws, PeerID serverID, rtc::Configuration config) {
+    PLOG_DEBUG << "Initiating connection from client " << m_localID << " to server " << serverID;
+
+    auto pc = std::make_shared<rtc::PeerConnection>(config);
+
+    pc->onStateChange([serverID](rtc::PeerConnection::State state) { PLOG_DEBUG << "Peer " << serverID << " state changed to: " << state; });
+
+    pc->onGatheringStateChange([serverID](rtc::PeerConnection::GatheringState state) { PLOG_DEBUG << "Peer " << serverID << " ICE gathering state: " << state; });
+
+    pc->onLocalDescription([ws, serverID](rtc::Description description) {
+        PLOG_DEBUG << "Generated local " << description.typeString() << " for server " << serverID;
+        nlohmann::json message = {{"id", std::to_string(serverID)}, {"type", description.typeString()}, {"description", std::string(description)}};
+        if (ws) {
+            PLOG_DEBUG << "Sending " << description.typeString() << " to server " << serverID;
+            ws->send(message.dump());
+        } else {
+            PLOG_ERROR << "WebSocket is closed, cannot send " << description.typeString();
+        }
+    });
+
+    pc->onLocalCandidate([ws, serverID](rtc::Candidate candidate) {
+        PLOG_DEBUG << "Generated ICE candidate for server " << serverID;
+        nlohmann::json message = {{"id", std::to_string(serverID)}, {"type", "candidate"}, {"candidate", std::string(candidate)}, {"mid", candidate.mid()}};
+        if (ws) {
+            ws->send(message.dump());
+        } else {
+            PLOG_ERROR << "WebSocket is closed, cannot send candidate";
+        }
+    });
+
+    pc->onDataChannel([this, serverID](std::shared_ptr<rtc::DataChannel> dc) {
+        PLOG_DEBUG << "Server " << serverID << " opened data channel with label: " << dc->label();
+
+        if (dc->label() == TEST_DATACHANNEL) {
+            PLOG_DEBUG << "Attaching test data channel handler for server " << serverID;
+            m_testDataChannel = dc;
+        } else if (dc->label() == STATE_DATACHANNEL) {
+            PLOG_DEBUG << "Attaching state data channel handler for server " << serverID;
+            m_stateDataChannel = dc;
+        } else {
+            PLOG_DEBUG << "Unrecognized data channel label: " << dc->label();
+        }
+    });
+
+    m_peerConnection = pc;
+    PLOG_DEBUG << "Creating offer for server " << serverID;
+    pc->createOffer();
+    PLOG_DEBUG << "Successfully initiated connection to server " << serverID;
 }

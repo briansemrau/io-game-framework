@@ -11,9 +11,7 @@
 
 NetworkServer::NetworkServer(Game& game) : m_game(game) { PLOG_DEBUG << "Constructor called"; }
 
-NetworkServer::~NetworkServer() {
-    stop();
-}
+NetworkServer::~NetworkServer() { stop(); }
 
 void NetworkServer::start() {
     if (m_running.load()) {
@@ -122,9 +120,9 @@ void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl,
     PLOG_DEBUG << "Created rtc::Configuration";
 
     // TODO put this in some config file
-    const std::vector<std::string> iceServerURLs{
-        {"stun:stun.l.google.com:19302"}, {"stun:stun.l.google.com:5349"},  {"stun:stun1.l.google.com:3478"}, {"stun:stun1.l.google.com:5349"},  {"stun:stun2.l.google.com:19302"},
-        {"stun:stun2.l.google.com:5349"}, {"stun:stun3.l.google.com:3478"}, {"stun:stun3.l.google.com:5349"}, {"stun:stun4.l.google.com:19302"}, {"stun:stun4.l.google.com:5349"}};
+    const std::vector<std::string> iceServerURLs{{"stun:stun.l.google.com:19302"}, {"stun:stun.l.google.com:5349"}, {"stun:stun1.l.google.com:3478"},
+        {"stun:stun1.l.google.com:5349"}, {"stun:stun2.l.google.com:19302"}, {"stun:stun2.l.google.com:5349"}, {"stun:stun3.l.google.com:3478"}, {"stun:stun3.l.google.com:5349"},
+        {"stun:stun4.l.google.com:19302"}, {"stun:stun4.l.google.com:5349"}};
     PLOG_DEBUG << "Adding " << iceServerURLs.size() << " ICE servers";
     for (const auto& server : iceServerURLs) {
         config.iceServers.push_back(rtc::IceServer(server));
@@ -143,12 +141,18 @@ void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl,
     std::promise<void> wsPromise;
     auto wsFuture = wsPromise.get_future();
 
-    ws->onOpen([&wsPromise, localID]() {
+    ws->onOpen([&wsPromise, localID, this, ws]() {
         PLOG_DEBUG << "WebSocket connected for server (localID=" << localID << ")";
+
+        nlohmann::json registerMsg = {{"id", std::to_string(localID)}, {"type", "register"}, {"role", "server"}, {"name", "Server " + std::to_string(localID)}, {"max_players", 32},
+            {"game_mode", "default"}};
+        ws->send(registerMsg.dump());
+        PLOG_DEBUG << "Sent registration message for server " << localID;
+
         wsPromise.set_value();
     });
     ws->onError([&wsPromise, localID](std::string s) {
-        PLOG_ERROR << "[WebSocket.onError] WebSocket error for server (localID=" << localID << "): " << s;
+        PLOG_ERROR << "WebSocket error for server (localID=" << localID << "): " << s;
         wsPromise.set_exception(std::make_exception_ptr(std::runtime_error(s)));
     });
     ws->onClosed([localID]() { PLOG_DEBUG << "WebSocket closed for server (localID=" << localID << ")"; });
@@ -167,7 +171,7 @@ void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl,
             message = nlohmann::json::parse(rawData);
             PLOG_DEBUG << "Parsed JSON successfully";
         } catch (const std::exception& e) {
-            PLOG_ERROR << "[WebSocket.onMessage] Failed to parse JSON: " << e.what();
+            PLOG_ERROR << "Failed to parse JSON: " << e.what();
             return;
         }
 
@@ -184,7 +188,7 @@ void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl,
             id = std::stoull(id_str);
             PLOG_DEBUG << "Parsed peer ID: " << id;
         } catch (const std::invalid_argument& ia) {
-            PLOG_ERROR << "[WebSocket.onMessage] Message peer ID is invalid: " << ia.what() << " (value: " << id_str << ")";
+            PLOG_ERROR << "Message peer ID is invalid: " << ia.what() << " (value: " << id_str << ")";
             return;
         }
 
@@ -201,18 +205,18 @@ void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl,
             PLOG_DEBUG << "Found existing client connection for peer ID " << id;
             pc = jt->second->peerConnection;
         } else if (type == "offer") {
-            PLOG_DEBUG << "Received 'offer' from peer " << id << ", creating new peer connection";
-            createPeerConnection(config, wws, id);
+            PLOG_DEBUG << "Received 'offer' from peer " << id << ", creating new client connection";
+            createClientConnection(config, wws, id);
             // Get the newly created connection
             auto jt = m_clients.find(id);
             if (jt != m_clients.end()) {
                 pc = jt->second->peerConnection;
             } else {
-                PLOG_ERROR << "[WebSocket.onMessage] Failed to find newly created peer connection";
+                PLOG_ERROR << "Failed to find newly created connection";
                 return;
             }
         } else {
-            PLOG_ERROR << "[WebSocket.onMessage] No peer connection exists for peer " << id << " and type is " << type;
+            PLOG_ERROR << "No connection exists for peer " << id << " and type is " << type;
             return;
         }
 
@@ -244,25 +248,15 @@ void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl,
     wsFuture.get();
 }
 
-std::shared_ptr<rtc::PeerConnection> NetworkServer::createPeerConnection(const rtc::Configuration& config, std::weak_ptr<rtc::WebSocket> wws, PeerID id) {
-    PLOG_DEBUG << "Creating peer connection for peer ID " << id;
+void NetworkServer::createClientConnection(const rtc::Configuration& config, std::weak_ptr<rtc::WebSocket> wws, PeerID id) {
+    PLOG_DEBUG << "Creating connection for peer ID " << id;
     assert(!m_clients.contains(id));
 
     auto pc = std::make_shared<rtc::PeerConnection>(config);
     PLOG_DEBUG << "Created rtc::PeerConnection object";
 
-    // Store the connection in our clients map
-    {
-        std::lock_guard lock(m_clientsMutex);
-        auto clientConn = std::make_unique<ClientConnection>();
-        clientConn->peerConnection = pc;
-        m_clients[id] = std::move(clientConn);
-        PLOG_DEBUG << "Stored connection in m_clients, total clients: " << m_clients.size();
-    }
-
     pc->onStateChange([id](rtc::PeerConnection::State state) { PLOG_DEBUG << "Peer " << id << " state changed to: " << state; });
-    pc->onGatheringStateChange(
-        [id](rtc::PeerConnection::GatheringState state) { PLOG_DEBUG << "Peer " << id << " ICE gathering state: " << state; });
+    pc->onGatheringStateChange([id](rtc::PeerConnection::GatheringState state) { PLOG_DEBUG << "Peer " << id << " ICE gathering state: " << state; });
     pc->onLocalDescription([wws, id](rtc::Description description) {
         PLOG_DEBUG << "Peer " << id << " generated local " << description.typeString() << " (" << std::string(description).size() << " bytes)";
         nlohmann::json message = {{"id", id}, {"type", description.typeString()}, {"description", std::string(description)}};
@@ -270,7 +264,7 @@ std::shared_ptr<rtc::PeerConnection> NetworkServer::createPeerConnection(const r
             PLOG_DEBUG << "Sending " << description.typeString() << " via websocket";
             ws->send(message.dump());
         } else {
-            PLOG_ERROR << "[PeerConnection.onLocalDescription] WebSocket is closed, cannot send " << description.typeString();
+            PLOG_ERROR << "WebSocket is closed, cannot send " << description.typeString();
         }
     });
     pc->onLocalCandidate([wws, id](rtc::Candidate candidate) {
@@ -279,10 +273,11 @@ std::shared_ptr<rtc::PeerConnection> NetworkServer::createPeerConnection(const r
         if (auto ws = wws.lock()) {
             ws->send(message.dump());
         } else {
-            PLOG_ERROR << "[PeerConnection.onLocalCandidate] WebSocket is closed, cannot send candidate";
+            PLOG_ERROR << "WebSocket is closed, cannot send candidate";
         }
     });
 
+    /*
     pc->onDataChannel([this, id](std::shared_ptr<rtc::DataChannel> dc) {
         PLOG_DEBUG << "Peer " << id << " opened data channel with label: " << dc->label();
 
@@ -301,13 +296,30 @@ std::shared_ptr<rtc::PeerConnection> NetworkServer::createPeerConnection(const r
         } else {
             PLOG_DEBUG << "Unrecognized data channel label: " << dc->label();
         }
+    });*/
+
+    PLOG_DEBUG << "Creating local description (answer) for peer " << id;
+    pc->createAnswer();
+
+    auto clientConn = std::make_unique<ClientConnection>();
+    clientConn->peerConnection = pc;
+
+    clientConn->testDataChannel = pc->createDataChannel(TEST_DATACHANNEL, {});  // reliable
+    clientConn->stateDataChannel = pc->createDataChannel(STATE_DATACHANNEL, {
+        .reliability = {
+            .unordered = true,
+            .maxRetransmits = 0,
+        },
     });
 
-    PLOG_DEBUG << "Creating local description (offer) for peer " << id;
-    pc->createOffer();
+    // Store the connection in our clients map
+    {
+        std::lock_guard lock(m_clientsMutex);
+        m_clients[id] = std::move(clientConn);
+        PLOG_DEBUG << "Stored connection in m_clients, total clients: " << m_clients.size();
+    }
 
-    PLOG_DEBUG << "Successfully created peer connection for peer ID " << id;
-    return pc;
+    PLOG_DEBUG << "Successfully created server connection for peer ID " << id;
 }
 
 void NetworkServer::run() {

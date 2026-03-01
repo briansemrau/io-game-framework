@@ -28,7 +28,8 @@ void ClientInstance::run() {
 
     raylib::SetWindowTitle("Test Game");
 
-    m_networkClient.connect("localhost", 9812);
+    constexpr PeerID SERVER_ID = 12345;  // TODO: get from matchmaking server
+    m_networkClient.connect("localhost", 9812, SERVER_ID);
 
     float timescale = 1.0;  // TODO get from server. maybe encapsulate in game state? or do we want some generic header
                             // data in the network data?
@@ -95,6 +96,4 @@ void ClientInstance::handleInput() {
 
 void ClientInstance::step() { m_game.step(); }
 
-void ClientInstance::render() {
-    m_renderer.render(m_game.getState(), m_renderState);
-}
+void ClientInstance::render() { m_renderer.render(m_game.getState(), m_renderState); }
