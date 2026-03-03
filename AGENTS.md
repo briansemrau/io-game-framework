@@ -27,7 +27,7 @@ game/
     server/     - Server executable code (no graphics or input)
   thirdparty/   - Third party dependencies (git submodules, do not edit)
   Dockerfile.game-server
-scripts/        - Build scripts for various platforms
+scripts/build/        - Build scripts for various platforms
 docs/           - Architecture documentation
 infra/          - Infrastructure as code (docker-compose, etc.)
 signalling-server/  - Go-based WebRTC signalling server
@@ -59,11 +59,10 @@ cmake --build --preset <preset-name>
 
 ### Scripts
 
-- `scripts/build.sh` - Linux server + WASM client
-- `scripts/build-linux-{client,server}.sh` - Linux native builds
-- `scripts/build-windows-msvc-{client,server}.ps1` - Windows MSVC builds
-- `scripts/build-wasm-client.sh` - WebAssembly client
-- `scripts/build-docker-{server,all}.sh` - Docker images
+- `scripts/build/build-linux-{client,server}.sh` - Linux native builds
+- `scripts/build/build-windows-msvc-{client,server}.ps1` - Windows MSVC builds
+- `scripts/build/build-wasm-client.sh` - WebAssembly client
+- `scripts/build/build-docker-server.sh` - Docker images
 
 ## Dependencies
 
@@ -127,10 +126,10 @@ The only exception to this rule is on "*-freeform" branches. You may never switc
 
 ```bash
 # Build all images
-bash scripts/build-docker-all.sh [release|debug]
+bash scripts/build-local-test.sh [release|debug]
 
 # Run local development
-docker-compose -f infra/docker-compose.local-debug.yml up -d
+docker-compose -f infra/docker-compose.local-test.yml up -d
 ```
 
 ### Environment Variables
@@ -139,5 +138,5 @@ docker-compose -f infra/docker-compose.local-debug.yml up -d
 
 ## Additional Documentation
 
-- `docs/network_architecture.md` - Detailed network architecture with rollback resimulation design
+- `docs/netcode.md` - Detailed network architecture with rollback resimulation design
 - `infra/README.md` - Infrastructure notes

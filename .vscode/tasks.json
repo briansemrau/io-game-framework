@@ -5,7 +5,7 @@
 			"label": "Build: Linux Server (Release)",
 			"type": "shell",
 			"command": "bash",
-			"args": ["./scripts/build-linux-server.sh", "release"],
+			"args": ["./scripts/build/build-linux-server.sh", "release"],
 			"problemMatcher": ["$gcc"],
 			"group": "build"
 		},
@@ -13,7 +13,7 @@
 			"label": "Build: Linux Server (Debug)",
 			"type": "shell",
 			"command": "bash",
-			"args": ["./scripts/build-linux-server.sh", "debug"],
+			"args": ["./scripts/build/build-linux-server.sh", "debug"],
 			"problemMatcher": ["$gcc"],
 			"group": "build"
 		},
@@ -21,7 +21,7 @@
 			"label": "Build: Linux Client (Release)",
 			"type": "shell",
 			"command": "bash",
-			"args": ["./scripts/build-linux-client.sh", "release"],
+			"args": ["./scripts/build/build-linux-client.sh", "release"],
 			"problemMatcher": ["$gcc"],
 			"group": "build"
 		},
@@ -29,7 +29,7 @@
 			"label": "Build: Linux Client (Debug)",
 			"type": "shell",
 			"command": "bash",
-			"args": ["./scripts/build-linux-client.sh", "debug"],
+			"args": ["./scripts/build/build-linux-client.sh", "debug"],
 			"problemMatcher": ["$gcc"],
 			"group": "build"
 		},
@@ -37,7 +37,7 @@
 			"label": "Build: WASM Client (Release)",
 			"type": "shell",
 			"command": "bash",
-			"args": ["./scripts/build-wasm-client.sh", "release"],
+			"args": ["./scripts/build/build-wasm-client.sh", "release"],
 			"problemMatcher": ["$gcc"],
 			"group": "build"
 		},
@@ -45,7 +45,7 @@
 			"label": "Build: WASM Client (Debug)",
 			"type": "shell",
 			"command": "bash",
-			"args": ["./scripts/build-wasm-client.sh", "debug"],
+			"args": ["./scripts/build/build-wasm-client.sh", "debug"],
 			"problemMatcher": ["$gcc"],
 			"group": "build"
 		},
@@ -53,7 +53,7 @@
 			"label": "Build: Windows MSVC Client (Release)",
 			"type": "shell",
 			"command": "powershell",
-			"args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "./scripts/build-windows-msvc-client.ps1", "release"],
+			"args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "./scripts/build/build-windows-msvc-client.ps1", "release"],
 			"problemMatcher": ["$msCompile"],
 			"group": "build"
 		},
@@ -61,7 +61,7 @@
 			"label": "Build: Windows MSVC Client (Debug)",
 			"type": "shell",
 			"command": "powershell",
-			"args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "./scripts/build-windows-msvc-client.ps1", "debug"],
+			"args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "./scripts/build/build-windows-msvc-client.ps1", "debug"],
 			"problemMatcher": ["$msCompile"],
 			"group": "build"
 		},
@@ -69,7 +69,7 @@
 			"label": "Build: Windows MSVC Server (Release)",
 			"type": "shell",
 			"command": "powershell",
-			"args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "./scripts/build-windows-msvc-server.ps1", "release"],
+			"args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "./scripts/build/build-windows-msvc-server.ps1", "release"],
 			"problemMatcher": ["$msCompile"],
 			"group": "build"
 		},
@@ -77,7 +77,7 @@
 			"label": "Build: Windows MSVC Server (Debug)",
 			"type": "shell",
 			"command": "powershell",
-			"args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "./scripts/build-windows-msvc-server.ps1", "debug"],
+			"args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "./scripts/build/build-windows-msvc-server.ps1", "debug"],
 			"problemMatcher": ["$msCompile"],
 			"group": "build"
 		}

@@ -2,19 +2,21 @@ version: '3.8'
 
 services:
   signalling-server:
+    container_name: signalling-server
     build:
-      context: .
+      context: ../signalling-server
       dockerfile: Dockerfile.signalling
     ports:
-      - "8080:8080"
+      - "9812:8080"
     environment:
       - LOG_LEVEL=info
     networks:
       - service-network
 
   game-server:
+    container_name: game-server
     build:
-      context: .
+      context: ../game
       dockerfile: Dockerfile.game-server
       args:
         - BUILD_TYPE=debug
