@@ -7,8 +7,6 @@
 
 #include "box2d/box2d.h"
 
-using id_t = uint64_t;
-
 static constexpr uint32_t FixedTimestepsPerSecond = 60;
 static constexpr float FixedTimestepDuration = 1.0f / static_cast<float>(FixedTimestepsPerSecond);
 

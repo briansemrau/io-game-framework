@@ -308,6 +308,7 @@ void NetworkServer::createClientConnection(const rtc::Configuration& config, std
     clientConn->stateDataChannel = pc->createDataChannel(STATE_DATACHANNEL, {
         .reliability = {
             .unordered = true,
+            .maxPacketLifeTime = std::chrono::duration_cast<std::chrono::milliseconds>(m_tickPeriod * 3),
             .maxRetransmits = 0,
         },
     });

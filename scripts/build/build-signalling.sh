@@ -9,7 +9,7 @@ if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 fi
 
 CONFIG="${1:-release}"
-DOCKERFILE="signalling-server/Dockerfile.signalling"
+DOCKERFILE="Dockerfile.signalling"
 IMAGE_NAME="signalling-server:latest"
 
 echo "Building Signalling Server ($CONFIG)..."

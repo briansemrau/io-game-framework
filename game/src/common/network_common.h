@@ -1,6 +1,7 @@
 #ifndef NETWORK_COMMON_H
 #define NETWORK_COMMON_H
 
+#include <cstdint>
 #include <string>
 
 static constexpr auto TEST_DATACHANNEL = "test";

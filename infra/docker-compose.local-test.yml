@@ -1,11 +1,10 @@
-version: '3.8'
-
 services:
   signalling-server:
     container_name: signalling-server
-    build:
-      context: ../signalling-server
-      dockerfile: Dockerfile.signalling
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile.signalling
+    image: signalling-server:latest
     ports:
       - "9812:8080"
     environment:
@@ -15,11 +14,12 @@ services:
 
   game-server:
     container_name: game-server
-    build:
-      context: ../game
-      dockerfile: Dockerfile.game-server
-      args:
-        - BUILD_TYPE=debug
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile.game-server
+    #   args:
+    #     - BUILD_TYPE=Debug
+    image: game-server:latest
     environment:
       - SIGNALING_URL=signalling-server:8080
     depends_on:

@@ -1,8 +1,10 @@
 #include "game.h"
 
 #include <cmath>
+#include <mutex>
 #include <numbers>
 #include <shared_mutex>
+#include <utility>
 
 #include "box2d/box2d.h"
 #include "physics_settings.h"

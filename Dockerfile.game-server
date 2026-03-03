@@ -1,0 +1,73 @@
+# Multi-stage Dockerfile for Game Server
+
+# Stage 1: Build
+FROM gcc:13 AS builder
+
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    cmake \
+    ninja-build \
+    git \
+    libssl-dev \
+    pkg-config \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install CMake
+ARG CMAKE_VERSION=3.31.11
+RUN wget -q https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz \
+    && tar -xzf cmake-$CMAKE_VERSION-linux-x86_64.tar.gz \
+    && mv cmake-$CMAKE_VERSION-linux-x86_64 /opt/cmake \
+    && ln -sf /opt/cmake/bin/cmake /usr/local/bin/cmake \
+    && rm cmake-$CMAKE_VERSION-linux-x86_64.tar.gz
+
+# Copy source code
+COPY CMakePresets.json CMakePresets.json
+COPY CMakeLists.txt CMakeLists.txt
+COPY game/ game/
+
+# Create build directory
+RUN mkdir -p build
+
+ARG BUILD_TYPE=Release
+
+# Configure with CMake
+WORKDIR /build/build
+RUN cmake -G "Ninja Multi-Config" \
+    -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+    -DBUILD_CLIENT=OFF \
+    -S .. -B .
+
+# Build server
+RUN cmake --build . --config $BUILD_TYPE
+
+# Stage 2: Runtime
+FROM debian:bookworm-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libssl3 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy binary from builder
+ARG BUILD_TYPE=Release
+COPY --from=builder /build/build/server/$BUILD_TYPE/server /app/server
+
+# Copy all shared libraries from build output and thirdparty directories
+COPY --from=builder --chown=root:root /build/game/thirdparty /build/game/thirdparty
+COPY --from=builder --chown=root:root /build/build /build/build
+
+# Recursively copy all .so files to system library path
+RUN find /build -name "*.so*" -type f -exec cp {} /usr/lib/ \; && \
+    ldconfig && \
+    rm -rf /build
+
+# Set environment variables
+ENV SIGNALING_URL=signalling-server:8080
+
+# Run server
+ENTRYPOINT ["/app/server"]

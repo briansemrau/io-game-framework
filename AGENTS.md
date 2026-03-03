@@ -15,7 +15,7 @@ The goal is to create a clean prototype demonstrating pristine design. The archi
 | **client** | `game/src/client/` | Desktop/WASM executable with graphics (raylib), input handling, and predictive simulation |
 | **server** | `game/src/server/` | Headless simulation server |
 | **signalling-server** | `signalling-server/` | Go WebSocket relay for WebRTC peer handshake |
-| **Dockerfiles** | `game/Dockerfile.game-server`, `signalling-server/Dockerfile.signalling` | Container images for server deployment |
+| **Dockerfiles** | `Dockerfile.game-server`, `Dockerfile.signalling` | Container images for server deployment |
 
 ## Project Structure
 
