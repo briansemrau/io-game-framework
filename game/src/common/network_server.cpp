@@ -132,8 +132,8 @@ void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl,
     config.enableIceUdpMux = true;
     PLOG_DEBUG << "Enabled ICE UDP mux";
 
-    PeerID localID = generateRandomPeerID();
-    PLOG_DEBUG << "Generated local PeerID: " << localID;
+    m_localID = 12345;//generateRandomPeerID();
+    PLOG_DEBUG << "Generated local PeerID: " << m_localID;
 
     auto ws = std::make_shared<rtc::WebSocket>();
     PLOG_DEBUG << "Created WebSocket object";
@@ -141,21 +141,21 @@ void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl,
     std::promise<void> wsPromise;
     auto wsFuture = wsPromise.get_future();
 
-    ws->onOpen([&wsPromise, localID, this, ws]() {
-        PLOG_DEBUG << "WebSocket connected for server (localID=" << localID << ")";
+    ws->onOpen([&wsPromise, this, ws]() {
+        PLOG_DEBUG << "WebSocket connected for server (localID=" << m_localID << ")";
 
-        nlohmann::json registerMsg = {{"id", std::to_string(localID)}, {"type", "register"}, {"role", "server"}, {"name", "Server " + std::to_string(localID)}, {"max_players", 32},
+        nlohmann::json registerMsg = {{"id", std::to_string(m_localID)}, {"type", "register"}, {"role", "server"}, {"name", "Server " + std::to_string(m_localID)}, {"max_players", 32},
             {"game_mode", "default"}};
         ws->send(registerMsg.dump());
-        PLOG_DEBUG << "Sent registration message for server " << localID;
+        PLOG_DEBUG << "Sent registration message for server " << m_localID;
 
         wsPromise.set_value();
     });
-    ws->onError([&wsPromise, localID](std::string s) {
-        PLOG_ERROR << "WebSocket error for server (localID=" << localID << "): " << s;
+    ws->onError([&wsPromise, this](std::string s) {
+        PLOG_ERROR << "WebSocket error for server (localID=" << m_localID << "): " << s;
         wsPromise.set_exception(std::make_exception_ptr(std::runtime_error(s)));
     });
-    ws->onClosed([localID]() { PLOG_DEBUG << "WebSocket closed for server (localID=" << localID << ")"; });
+    ws->onClosed([this]() { PLOG_DEBUG << "WebSocket closed for server (localID=" << m_localID << ")"; });
 
     ws->onMessage([this, &config, wws = static_cast<std::weak_ptr<rtc::WebSocket>>(ws)](auto data) {
         if (!std::holds_alternative<std::string>(data)) {
@@ -241,7 +241,7 @@ void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl,
     m_signallingWebsocket = ws;
 
     const std::string url =
-        (signalServerUrl.find("://") == std::string::npos ? "ws://" : "") + signalServerUrl + ":" + std::to_string(port) + "/connect/" + std::to_string(localID);
+        (signalServerUrl.find("://") == std::string::npos ? "ws://" : "") + signalServerUrl + ":" + std::to_string(port) + "/connect/" + std::to_string(m_localID);
     PLOG_DEBUG << "Opening WebSocket to: " << url;
     ws->open(url);
     PLOG_DEBUG << "WebSocket open() called, waiting for connection...";
@@ -259,7 +259,7 @@ void NetworkServer::createClientConnection(const rtc::Configuration& config, std
     pc->onGatheringStateChange([id](rtc::PeerConnection::GatheringState state) { PLOG_DEBUG << "Peer " << id << " ICE gathering state: " << state; });
     pc->onLocalDescription([wws, id](rtc::Description description) {
         PLOG_DEBUG << "Peer " << id << " generated local " << description.typeString() << " (" << std::string(description).size() << " bytes)";
-        nlohmann::json message = {{"id", id}, {"type", description.typeString()}, {"description", std::string(description)}};
+        nlohmann::json message = {{"id", std::to_string(id)}, {"type", description.typeString()}, {"description", std::string(description)}};
         if (auto ws = wws.lock()) {
             PLOG_DEBUG << "Sending " << description.typeString() << " via websocket";
             ws->send(message.dump());
@@ -269,7 +269,7 @@ void NetworkServer::createClientConnection(const rtc::Configuration& config, std
     });
     pc->onLocalCandidate([wws, id](rtc::Candidate candidate) {
         PLOG_DEBUG << "Peer " << id << " generated ICE candidate (mid=" << candidate.mid() << ", len=" << std::string(candidate).size() << ")";
-        nlohmann::json message = {{"id", id}, {"type", "candidate"}, {"candidate", std::string(candidate)}, {"mid", candidate.mid()}};
+        nlohmann::json message = {{"id", std::to_string(id)}, {"type", "candidate"}, {"candidate", std::string(candidate)}, {"mid", candidate.mid()}};
         if (auto ws = wws.lock()) {
             ws->send(message.dump());
         } else {
@@ -277,7 +277,6 @@ void NetworkServer::createClientConnection(const rtc::Configuration& config, std
         }
     });
 
-    /*
     pc->onDataChannel([this, id](std::shared_ptr<rtc::DataChannel> dc) {
         PLOG_DEBUG << "Peer " << id << " opened data channel with label: " << dc->label();
 
@@ -285,33 +284,38 @@ void NetworkServer::createClientConnection(const rtc::Configuration& config, std
             PLOG_DEBUG << "Attaching test data channel handler for peer " << id;
             std::lock_guard lock(m_clientsMutex);
             if (auto it = m_clients.find(id); it != m_clients.end()) {
-                it->second->m_testDataChannel = dc;
-            }
-        } else if (dc->label() == DEFAULT_DATACHANNEL) {
-            PLOG_DEBUG << "Attaching state data channel handler for peer " << id;
-            std::lock_guard lock(m_clientsMutex);
-            if (auto it = m_clients.find(id); it != m_clients.end()) {
-                it->second->m_stateDataChannel = dc;
+                it->second->testDataChannel = dc;
             }
         } else {
-            PLOG_DEBUG << "Unrecognized data channel label: " << dc->label();
+            PLOG_DEBUG << "Unexpected data channel label: " << dc->label();
         }
-    });*/
-
-    PLOG_DEBUG << "Creating local description (answer) for peer " << id;
-    pc->createAnswer();
+    });
 
     auto clientConn = std::make_unique<ClientConnection>();
-    clientConn->peerConnection = pc;
 
-    clientConn->testDataChannel = pc->createDataChannel(TEST_DATACHANNEL, {});  // reliable
-    clientConn->stateDataChannel = pc->createDataChannel(STATE_DATACHANNEL, {
-        .reliability = {
+    {
+        auto reliability = rtc::Reliability {
             .unordered = true,
-            .maxPacketLifeTime = std::chrono::duration_cast<std::chrono::milliseconds>(m_tickPeriod * 3),
             .maxRetransmits = 0,
-        },
-    });
+        };
+        auto dc = pc->createDataChannel(STATE_DATACHANNEL, { .reliability = reliability });
+        dc->onOpen([this, id, wdc = static_cast<std::weak_ptr<rtc::DataChannel>>(dc)]() {
+            PLOG_DEBUG << "DataChannel from " << id << " open";
+            if (auto dc = wdc.lock()) {
+                PLOG_DEBUG << "Hello from " + m_localID;
+            }
+        });
+        dc->onClosed([id]() { PLOG_DEBUG << "DataChannel from " << id << " closed"; });
+        dc->onMessage([id, wdc = static_cast<std::weak_ptr<rtc::DataChannel>>(dc)](auto data) {
+            if (std::holds_alternative<std::string>(data))
+                PLOG_DEBUG << "Message from " << id << " received: " << std::get<std::string>(data);
+            else
+                PLOG_DEBUG << "Binary message from " << id << " received, size=" << std::get<rtc::binary>(data).size();
+        });
+        clientConn->stateDataChannel = std::move(dc);
+    }
+
+    clientConn->peerConnection = std::move(pc);
 
     // Store the connection in our clients map
     {

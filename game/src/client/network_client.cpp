@@ -103,7 +103,7 @@ void NetworkClient::connect(const std::string& signalServerUrl, uint16_t port, P
 
         if (m_peerConnection != nullptr) {
             PLOG_DEBUG << "Peer connection already exists, ignoring message type=" << type;
-        } else if (!m_peerConnection && type == "offer") {
+        } else if (type == "offer") {
             // TODO: P2P capability - enable when ready to support client-to-client connections
             // PLOG_DEBUG << "Received 'offer' from peer " << id << ", creating peer connection";
             // createPeerConnection(config, wws, id);
@@ -283,12 +283,32 @@ void NetworkClient::startServerConnection(std::shared_ptr<rtc::WebSocket> ws, Pe
             PLOG_DEBUG << "Attaching state data channel handler for server " << serverID;
             m_stateDataChannel = dc;
         } else {
-            PLOG_DEBUG << "Unrecognized data channel label: " << dc->label();
+            PLOG_DEBUG << "Unexpected data channel label: " << dc->label();
         }
     });
 
-    m_peerConnection = pc;
-    PLOG_DEBUG << "Creating offer for server " << serverID;
-    pc->createOffer();
-    PLOG_DEBUG << "Successfully initiated connection to server " << serverID;
+    {
+        auto dc = pc->createDataChannel(TEST_DATACHANNEL, {});  // reliable
+        dc->onOpen([this, serverID, wdc = static_cast<std::weak_ptr<rtc::DataChannel>>(dc)]() {
+            PLOG_DEBUG << "Test datachannel opening for server " << serverID;
+            if (auto dc = wdc.lock()) {
+                PLOG_DEBUG << "Datachannel \"" << dc->label() << "\" (from id: " << serverID << ") has opened";
+                dc->send("Test hello from " + std::to_string(m_localID));
+                PLOG_DEBUG << "Sent test hello message";
+            }
+        });
+        dc->onClosed([serverID, wdc = static_cast<std::weak_ptr<rtc::DataChannel>>(dc)]() {
+            if (auto dc = wdc.lock()) PLOG_DEBUG << "Datachannel \"" << dc->label() << "\" (from id: " << serverID << ") has closed";
+        });
+        dc->onMessage([serverID](auto data) {
+            if (std::holds_alternative<std::string>(data)) {
+                PLOG_INFO << "[DataChannel.onMessage] Message from " << serverID << ": " << std::get<std::string>(data);
+            } else {
+                PLOG_DEBUG << "Binary message from " << serverID;
+            }
+        });
+        m_testDataChannel = std::move(dc);
+    }
+
+    m_peerConnection = std::move(pc);
 }

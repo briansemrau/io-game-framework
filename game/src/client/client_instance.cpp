@@ -24,7 +24,8 @@ void ClientInstance::run() {
 
     raylib::InitWindow(screenWidth, screenHeight, "Test Game");
     raylib::SetWindowState(raylib::FLAG_WINDOW_RESIZABLE);
-    raylib::SetTargetFPS(raylib::GetMonitorRefreshRate(raylib::GetCurrentMonitor()));
+    auto lastRefreshRate = raylib::GetMonitorRefreshRate(raylib::GetCurrentMonitor());
+    raylib::SetTargetFPS(lastRefreshRate);
 
     raylib::SetWindowTitle("Test Game");
 
@@ -52,7 +53,11 @@ void ClientInstance::run() {
         remainingTime += elapsed;
 
         // Window management I guess
-        raylib::SetTargetFPS(raylib::GetMonitorRefreshRate(raylib::GetCurrentMonitor()));
+        auto nextRefreshRate = raylib::GetMonitorRefreshRate(raylib::GetCurrentMonitor());
+        if (nextRefreshRate != lastRefreshRate) {
+            raylib::SetTargetFPS(raylib::GetMonitorRefreshRate(raylib::GetCurrentMonitor()));
+            lastRefreshRate = nextRefreshRate;
+        }
 
         // Input
         handleInput();

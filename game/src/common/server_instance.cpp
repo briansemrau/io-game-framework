@@ -45,8 +45,9 @@ void ServerInstance::run() {
         }
 
         // Do statistics
+        // TODO stop wasting so much compute on statistics
         stepDurationRecord.push_back(elapsed);
-        if (stepDurationRecord.size() > FixedTimestepsPerSecond * 3) {
+        if (stepDurationRecord.size() > 20) {
             stepDurationRecord.pop_front();
         }
         const auto meanStepDuration =
@@ -60,6 +61,8 @@ void ServerInstance::run() {
             static constexpr auto ramp_time = FixedTimestepDuration * 3;
             float alpha = std::clamp((remainingTime.count() - FixedTimestepDuration) / ramp_time, 0.0f, 1.0f);
             timescale = targetTimescale * alpha + 1.0f * (1.0f - alpha);
+        } else {
+            timescale = 1.0f;
         }
 
         const auto current_timestep = Seconds(FixedTimestepDuration) * timescale;

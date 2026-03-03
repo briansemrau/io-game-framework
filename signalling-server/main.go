@@ -37,15 +37,15 @@ type Message struct {
 }
 
 const (
-	MsgTypeOffer        = "offer"
-	MsgTypeAnswer       = "answer"
-	MsgTypeICECandidate = "ice-candidate"
-	MsgTypeRegister     = "register"
+	MsgTypeOffer     = "offer"
+	MsgTypeAnswer    = "answer"
+	MsgTypeCandidate = "candidate"
+	MsgTypeRegister  = "register"
 )
 
 func validateMessageType(t string) bool {
 	switch t {
-	case MsgTypeOffer, MsgTypeAnswer, MsgTypeICECandidate, MsgTypeRegister:
+	case MsgTypeOffer, MsgTypeAnswer, MsgTypeCandidate, MsgTypeRegister:
 		return true
 	default:
 		return false
@@ -197,8 +197,8 @@ func wsHandler(pm *PeerManager) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Incoming request: method=%s url=%s remoteAddr=%s", r.Method, r.URL.Path, r.RemoteAddr)
 
-		id := r.URL.Path[1:]
-		if id == "" {
+		id := strings.TrimPrefix(r.URL.Path, "/connect/")
+		if id == "" || id == r.URL.Path {
 			log.Printf("REJECTED: missing id in path %s", r.URL.Path)
 			http.Error(w, "missing id", http.StatusBadRequest)
 			return
@@ -315,6 +315,12 @@ func wsHandler(pm *PeerManager) http.HandlerFunc {
 
 			log.Printf("Target FOUND: forwarding message to id=%s", targetID)
 
+			msg.ID = id
+			data, err = json.Marshal(msg)
+			if err != nil {
+				log.Printf("JSON marshal ERROR for id=%s: %v, msg: %s", id, err, msg)
+				continue
+			}
 			if err := targetPeer.conn.WriteMessage(websocket.TextMessage, data); err != nil {
 				log.Printf("Write ERROR to target id=%s: %v", targetID, err)
 				return

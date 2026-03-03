@@ -85,6 +85,8 @@ private:
     std::thread m_networkThread;
     Seconds m_tickPeriod{0.1f};
 
+    PeerID m_localID;
+
     std::shared_ptr<rtc::WebSocket> m_signallingWebsocket;
 
     std::mutex m_clientsMutex;
