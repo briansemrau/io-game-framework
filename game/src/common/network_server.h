@@ -1,35 +1,6 @@
 #ifndef NETWORK_SERVER_H
 #define NETWORK_SERVER_H
 
-// =============================================================================
-// NetworkServer - Threaded WebRTC DataChannel Server
-// =============================================================================
-//
-// WEBRTC CONCEPTS (for those familiar with WebSockets/TCP/UDP):
-//
-// Unlike WebSockets where you simply connect to a URL, WebRTC requires a
-// "signaling" phase where peers exchange connection information out-of-band.
-// This class handles the WebRTC side, but you'll need a separate mechanism
-// (HTTP endpoint, WebSocket server, etc.) to exchange SDP and ICE candidates.
-//
-// FLOW:
-// 1. Client requests to connect → server creates PeerConnection
-// 2. Server generates SDP offer (localDescription) → send to client via signaling
-// 3. Client generates SDP answer → send to server via setRemoteDescription()
-// 4. Both sides exchange ICE candidates (network paths) via setRemoteCandidate()
-// 5. DataChannel opens, binary messages flow bidirectionally
-//
-// ICE SERVERS:
-// - STUN servers help discover your public IP (e.g., "stun:stun.l.google.com:19302")
-// - TURN servers act as relay if direct connection fails (for NAT traversal)
-//
-// THREADING:
-// - All WebRTC callbacks run on the network thread
-// - send()/broadcast() are thread-safe (queue messages for network thread)
-// - Callbacks (onMessage, onConnect, onDisconnect) fire from network thread
-//   → dispatch to your game thread as needed
-// =============================================================================
-
 #include <atomic>
 #include <chrono>
 #include <condition_variable>
@@ -46,12 +17,11 @@
 
 #include "game.h"
 #include "network_common.h"
+#include "nlohmann/json_fwd.hpp"
 
 class NetworkServer {
 public:
-    using Seconds = std::chrono::duration<float, std::ratio<1>>;
-
-    NetworkServer(Game& game);
+    NetworkServer(const Game&);
     ~NetworkServer();
 
     NetworkServer(const NetworkServer&) = delete;
@@ -64,18 +34,12 @@ public:
     bool isRunning() const;
 
 private:
-    // TODO move to network_common; reuse in network_client
-    struct ClientConnection {
-        std::string localDescription;
-        std::vector<std::string> pendingCandidates;
-        std::shared_ptr<rtc::PeerConnection> peerConnection;
-        std::shared_ptr<rtc::DataChannel> testDataChannel;
-        std::shared_ptr<rtc::DataChannel> stateDataChannel;
-    };
+    using Seconds = std::chrono::duration<float, std::ratio<1>>;
 
-    void startSignallingWebsocket(const std::string& signalServerUrl, uint16_t port);
+    void startSignallingWebsocket(const std::string& signalServerUrl, const uint16_t port);
+    void handleSignallingMessage(const nlohmann::json& message);
 
-    void createClientConnection(const rtc::Configuration&, std::weak_ptr<rtc::WebSocket>, PeerID id);
+    void createClientConnection(const PeerID);
 
     void run();
 
@@ -86,21 +50,10 @@ private:
     Seconds m_tickPeriod{0.1f};
 
     PeerID m_localID;
-
     std::shared_ptr<rtc::WebSocket> m_signallingWebsocket;
 
     std::mutex m_clientsMutex;
-    std::unordered_map<PeerID, std::unique_ptr<ClientConnection>> m_clients;
+    std::unordered_map<PeerID, NetworkConnection> m_clients;
     // std::atomic<PeerID> m_nextClientId{1};
-
-    // Tx message queue
-    struct OutgoingMessage {
-        PeerID clientId;
-        std::vector<std::byte> data;
-        bool broadcast;
-    };
-    std::mutex m_outgoingMutex;
-    std::condition_variable m_outgoingCv;
-    std::queue<OutgoingMessage> m_outgoingQueue;
 };
 #endif  // NETWORK_SERVER_H

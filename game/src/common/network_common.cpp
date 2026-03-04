@@ -11,9 +11,14 @@ std::string generateRandomIDStr(size_t length) {
     std::uniform_int_distribution<int> uniform(0, int(characters.size() - 1));
     std::generate(id.begin(), id.end(), [&]() { return characters.at(uniform(rng)); });
     return id;
-};
+}
 
 PeerID generateRandomPeerID() {
     static thread_local std::mt19937 rng(static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
     return std::uniform_int_distribution<uint64_t>()(rng);
+}
+
+std::vector<std::string> getDefaultIceServerUrls() {
+    return {"stun:stun.l.google.com:19302", "stun:stun.l.google.com:5349",  "stun:stun1.l.google.com:3478", "stun:stun1.l.google.com:5349",  "stun:stun2.l.google.com:19302",
+            "stun:stun2.l.google.com:5349", "stun:stun3.l.google.com:3478", "stun:stun3.l.google.com:5349", "stun:stun4.l.google.com:19302", "stun:stun4.l.google.com:5349"};
 }

@@ -15,11 +15,10 @@
 
 #include "game.h"
 #include "network_common.h"
+#include "nlohmann/json_fwd.hpp"
 
 class NetworkClient {
 public:
-    using Seconds = std::chrono::duration<float, std::ratio<1>>;
-
     NetworkClient(const Game&);
     ~NetworkClient();
 
@@ -28,23 +27,28 @@ public:
     NetworkClient(NetworkClient&&) = delete;
     NetworkClient& operator=(NetworkClient&&) = delete;
 
-    void connect(const std::string& signalServerUrl, uint16_t port, PeerID serverID);
+    void connect(const std::string& signalServerUrl, const uint16_t port, const PeerID);
     void disconnect();
     bool isConnected() const;
 
 private:
-    // TODO: P2P capability - uncomment when ready to support client-to-client connections
-    // void createPeerConnection(const rtc::Configuration&, std::weak_ptr<rtc::WebSocket>, PeerID id);
-    void startServerConnection(std::shared_ptr<rtc::WebSocket> ws, PeerID serverID, rtc::Configuration config);
+    using Seconds = std::chrono::duration<float, std::ratio<1>>;
 
-    void onStateMessage(std::vector<std::byte>);
+    void startSignallingWebsocket(const std::string& signalServerUrl, const uint16_t port);
+    void handleSignallingMessage(const nlohmann::json&);
+    
+    void createServerConnection(const PeerID);
+    // TODO: P2P capability? shall we support client-to-client connections?
+    // void createPeerConnection(const rtc::Configuration&, std::weak_ptr<rtc::WebSocket>, PeerID id);
+
+    void onStateMessage(const std::vector<std::byte>&);
 
     const Game& m_game;
 
     PeerID m_localID;
-    std::shared_ptr<rtc::PeerConnection> m_peerConnection;
-    std::shared_ptr<rtc::DataChannel> m_testDataChannel;
-    std::shared_ptr<rtc::DataChannel> m_stateDataChannel;
+    std::shared_ptr<rtc::WebSocket> m_signallingWebsocket;
+
+    NetworkConnection m_connection;
 };
 
 #endif  // NETWORK_CLIENT_H
