@@ -6,6 +6,16 @@ ColumnLimit: 180
 # AllowShortFunctionsOnASingleLine: Inline
 # DerivePointerAlignment: false
 PointerAlignment: Right
-# AlignAfterOpenBracket: false
-# AlignArrayOfStructures: AIAS_Right
-# AlignConsecutiveAssignments: false
+Cpp11BracedListStyle: false
+
+AlignAfterOpenBracket: false
+AlignArrayOfStructures: None
+AlignConsecutiveAssignments: false
+AlignConsecutiveBitFields: None
+AlignConsecutiveDeclarations: false
+AlignConsecutiveMacros: false
+AlignConsecutiveShortCaseStatements:
+  Enabled: false
+AlignEscapedNewlines: true
+AlignOperands: true
+AlignTrailingComments: false

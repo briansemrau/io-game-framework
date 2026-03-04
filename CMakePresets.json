@@ -43,26 +43,6 @@
 			}
 		},
 		{
-			"name": "windows-client-debug",
-			"displayName": "Windows MSVC Client Debug",
-			"inherits": "windows-msvc"
-		},
-		{
-			"name": "windows-client-release",
-			"displayName": "Windows MSVC Client Release",
-			"inherits": "windows-msvc"
-		},
-		{
-			"name": "windows-server-debug",
-			"displayName": "Windows MSVC Server Debug",
-			"inherits": "windows-msvc"
-		},
-		{
-			"name": "windows-server-release",
-			"displayName": "Windows MSVC Server Release",
-			"inherits": "windows-msvc"
-		},
-		{
 			"name": "windows-clang",
 			"displayName": "Windows Clang",
 			"description": "Windows with Clang",
@@ -118,22 +98,22 @@
 	"buildPresets": [
 		{
 			"name": "windows-client-debug",
-			"configurePreset": "windows-client-debug",
+			"configurePreset": "windows-msvc",
 			"configuration": "Debug"
 		},
 		{
 			"name": "windows-client-release",
-			"configurePreset": "windows-client-release",
+			"configurePreset": "windows-msvc",
 			"configuration": "Release"
 		},
 		{
 			"name": "windows-server-debug",
-			"configurePreset": "windows-server-debug",
+			"configurePreset": "windows-msvc",
 			"configuration": "Debug"
 		},
 		{
 			"name": "windows-server-release",
-			"configurePreset": "windows-server-release",
+			"configurePreset": "windows-msvc",
 			"configuration": "Release"
 		},
 		{

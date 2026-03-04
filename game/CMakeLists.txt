@@ -1,13 +1,33 @@
+
+function(suppress_third_party_warnings)
+    set(options "")
+    set(oneValueArgs "")
+    set(multiValueArgs TARGETS)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+    
+    foreach(target ${ARG_TARGETS})
+        if(TARGET ${target})
+            if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+                target_compile_options(${target} PRIVATE -w)
+            else()
+                target_compile_options(${target} PRIVATE /W0)
+            endif()
+        endif()
+    endforeach()
+endfunction()
+
 # Dependencies - platform-agnostic
 add_subdirectory(thirdparty/plog)
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(thirdparty/json)
 add_subdirectory(thirdparty/box2d)
 add_subdirectory(thirdparty/entt)
+suppress_third_party_warnings(TARGETS box2d entt)
 
 # Networking - platform-specific
 if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     add_subdirectory(thirdparty/datachannel-wasm)
+    suppress_third_party_warnings(TARGETS datachannel-wasm)
 else()
     set(NO_MEDIA ON CACHE BOOL "" FORCE)
     set(NO_EXAMPLES ON CACHE BOOL "" FORCE)
@@ -16,6 +36,7 @@ else()
     set(USE_SYSTEM_JSON ON CACHE BOOL "" FORCE)
     set(plog_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/game/thirdparty/plog/include)
     add_subdirectory(thirdparty/libdatachannel)
+    suppress_third_party_warnings(TARGETS datachannel datachannel-static usrsctplib juice juice-static)
 endif()
 
 # Transport abstraction layer
@@ -38,6 +59,8 @@ target_include_directories(common PUBLIC ${CMAKE_SOURCE_DIR}/game/src/common)
 # Client
 if(BUILD_CLIENT)
     add_subdirectory(thirdparty/raylib)
+    suppress_third_party_warnings(TARGETS raylib glfw)
+
     add_subdirectory(src/client)
 endif()
 
