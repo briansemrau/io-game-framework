@@ -1,0 +1,1 @@
+Checks: '-*,bugprone-*,cppcoreguidelines-*,performance-*,readability-*,modernize-*,-modernize-use-nullptr'
