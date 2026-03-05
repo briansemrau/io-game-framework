@@ -3,17 +3,12 @@
 
 #include <atomic>
 #include <chrono>
-#include <condition_variable>
-#include <cstddef>
-#include <functional>
 #include <memory>
 #include <mutex>
-#include <queue>
 #include <rtc/rtc.hpp>
 #include <string>
 #include <thread>
 #include <unordered_map>
-#include <vector>
 
 #include "game.h"
 #include "network_common.h"
@@ -21,13 +16,13 @@
 
 class NetworkServer {
 public:
-    NetworkServer(const Game&);
+    NetworkServer(const Game &);
     ~NetworkServer();
 
-    NetworkServer(const NetworkServer&) = delete;
-    NetworkServer& operator=(const NetworkServer&) = delete;
-    NetworkServer(NetworkServer&&) = delete;
-    NetworkServer& operator=(NetworkServer&&) = delete;
+    NetworkServer(const NetworkServer &) = delete;
+    NetworkServer &operator=(const NetworkServer &) = delete;
+    NetworkServer(NetworkServer &&) = delete;
+    NetworkServer &operator=(NetworkServer &&) = delete;
 
     void start();
     void stop();
@@ -36,20 +31,20 @@ public:
 private:
     using Seconds = std::chrono::duration<float, std::ratio<1>>;
 
-    void startSignallingWebsocket(const std::string& signalServerUrl, const uint16_t port);
-    void handleSignallingMessage(const nlohmann::json& message);
+    void startSignallingWebsocket(const std::string &signalServerUrl, uint16_t port);
+    void handleSignallingMessage(const nlohmann::json &message);
 
-    void createClientConnection(const PeerID);
+    void createClientConnection(PeerID);
 
     void run();
 
-    const Game& m_game;
+    const Game &m_game;
 
-    std::atomic<bool> m_running{false};
+    std::atomic<bool> m_running{ false };
     std::thread m_networkThread;
-    Seconds m_tickPeriod{0.1f};
+    Seconds m_tickPeriod{ 0.1f };
 
-    PeerID m_localID;
+    PeerID m_localID{};
     std::shared_ptr<rtc::WebSocket> m_signallingWebsocket;
 
     std::mutex m_clientsMutex;

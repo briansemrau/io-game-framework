@@ -1,3 +1,5 @@
+#include <zpp_bits.h>
+
 #include <any>
 #include <functional>
 #include <memory>
@@ -6,7 +8,6 @@
 #include <utility>
 #include <vector>
 
-#include <zpp_bits.h>
 
 class StateEventRegistry {
 public:
@@ -14,7 +15,7 @@ public:
 
     template <typename Func>
     EventId registerStateEventFunc(Func &&f) {
-        auto event = std::make_unique<EventImpl<std::decay_t<Func>>(std::forward<Func>(f));
+        auto event = std::make_unique<EventImpl<std::decay_t<Func>>>(std::forward<Func>(f));
         EventId id = ++m_nextId;
         m_eventFuncs.emplace(id, std::move(event));
         return id;
@@ -32,6 +33,10 @@ public:
 private:
     // Virtual for type erasure to store a generic pointer in the events registry
     struct IEvent {
+        IEvent(const IEvent &) = default;
+        IEvent(IEvent &&) = delete;
+        IEvent &operator=(const IEvent &) = default;
+        IEvent &operator=(IEvent &&) = delete;
         virtual ~IEvent() = default;
         virtual void invoke(std::vector<std::any>) = 0;
     };
@@ -40,7 +45,7 @@ private:
     struct EventImpl : IEvent {
         std::function<Call> func;
 
-        explicit EventImpl(Call &&f) : func(std::forward<Call>(f)) {}
+        explicit EventImpl(Call &&f) : func(std::move(f)) {}
 
         void invoke(std::vector<std::any> args) override { invokeImpl(std::move(args), std::make_index_sequence<call_arg_count>{}); }
 

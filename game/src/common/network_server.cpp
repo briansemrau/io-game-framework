@@ -7,7 +7,7 @@
 #include <mutex>
 #include <nlohmann/json.hpp>
 
-NetworkServer::NetworkServer(const Game& game) : m_game(game) {}
+NetworkServer::NetworkServer(const Game &game) : m_game(game) {}
 
 NetworkServer::~NetworkServer() { stop(); }
 
@@ -33,7 +33,7 @@ void NetworkServer::stop() {
 
 bool NetworkServer::isRunning() const { return m_running.load(); }
 
-void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl, const uint16_t port) {
+void NetworkServer::startSignallingWebsocket(const std::string &signalServerUrl, const uint16_t port) {
     m_localID = 12345;  // TODO
 
     auto ws = std::make_shared<rtc::WebSocket>();
@@ -64,7 +64,7 @@ void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl,
         nlohmann::json message;
         try {
             message = nlohmann::json::parse(rawData);
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             PLOG_ERROR << "Failed to parse JSON: " << e.what();
             return;
         }
@@ -85,17 +85,17 @@ void NetworkServer::startSignallingWebsocket(const std::string& signalServerUrl,
     }
 }
 
-void NetworkServer::handleSignallingMessage(const nlohmann::json& message) {
+void NetworkServer::handleSignallingMessage(const nlohmann::json &message) {
     auto idIt = message.find("id");
     if (idIt == message.end()) {
         PLOG_ERROR << "Message missing 'id' field";
         return;
     }
 
-    PeerID id;
+    PeerID id{};
     try {
         id = std::stoull(idIt->get<std::string>());
-    } catch (const std::invalid_argument&) {
+    } catch (const std::invalid_argument &) {
         PLOG_ERROR << "Invalid peer ID in message";
         return;
     }
@@ -145,20 +145,20 @@ void NetworkServer::createClientConnection(const PeerID id) {
     assert(!m_clients.contains(id));
 
     rtc::Configuration config;
-    for (const auto& url : getDefaultIceServerUrls()) {
-        config.iceServers.push_back(rtc::IceServer(url));
+    for (const auto &url : getDefaultIceServerUrls()) {
+        config.iceServers.emplace_back(url);
     }
     // config.enableIceUdpMux = true;
 
     NetworkConnection clientConn;
     clientConn.peerConnection = std::make_shared<rtc::PeerConnection>(config);
-    auto pc = clientConn.peerConnection;
+    auto &pc = clientConn.peerConnection;
 
     pc->onStateChange([id](rtc::PeerConnection::State state) { PLOG_DEBUG << "Peer " << id << " state changed to: " << state; });
 
     pc->onGatheringStateChange([id](rtc::PeerConnection::GatheringState state) { PLOG_DEBUG << "Peer " << id << " ICE gathering state: " << state; });
 
-    pc->onLocalDescription([ws = m_signallingWebsocket, id](rtc::Description description) {
+    pc->onLocalDescription([ws = m_signallingWebsocket, id](const rtc::Description &description) {
         PLOG_DEBUG << "Peer " << id << " generated local " << description.typeString() << " (" << std::string(description).size() << " bytes)";
         nlohmann::json message = { { "id", std::to_string(id) }, { "type", description.typeString() }, { "description", std::string(description) } };
         if (ws) {
@@ -169,7 +169,7 @@ void NetworkServer::createClientConnection(const PeerID id) {
         }
     });
 
-    pc->onLocalCandidate([ws = m_signallingWebsocket, id](rtc::Candidate candidate) {
+    pc->onLocalCandidate([ws = m_signallingWebsocket, id](const rtc::Candidate &candidate) {
         nlohmann::json message = { { "id", std::to_string(id) }, { "type", "candidate" }, { "candidate", std::string(candidate) }, { "mid", candidate.mid() } };
         if (ws) {
             ws->send(message.dump());
@@ -179,7 +179,7 @@ void NetworkServer::createClientConnection(const PeerID id) {
     });
 
     // Inbound data channels (test only)
-    pc->onDataChannel([this, id](std::shared_ptr<rtc::DataChannel> dc) {
+    pc->onDataChannel([this, id](const std::shared_ptr<rtc::DataChannel> &dc) {
         PLOG_DEBUG << "Peer " << id << " opened data channel with label: " << dc->label();
 
         if (dc->label() == TEST_DATACHANNEL) {
@@ -192,7 +192,7 @@ void NetworkServer::createClientConnection(const PeerID id) {
             dc->onClosed([id]() { PLOG_INFO << "Test datachannel closed for server " << id; });
             dc->onMessage([this, id, wdc = std::weak_ptr<rtc::DataChannel>(dc)](auto data) {
                 if (std::holds_alternative<rtc::binary>(data)) {
-                    auto& binaryData = std::get<rtc::binary>(data);
+                    auto &binaryData = std::get<rtc::binary>(data);
                     PLOG_DEBUG << "Received test message from server " << id << " (" << binaryData.size() << " bytes)";
                 }
             });
@@ -211,7 +211,7 @@ void NetworkServer::createClientConnection(const PeerID id) {
                 },
         };
         clientConn.stateDataChannel = pc->createDataChannel(STATE_DATACHANNEL, dcinit);
-        auto& dc = clientConn.stateDataChannel;
+        auto &dc = clientConn.stateDataChannel;
         dc->onOpen([localID = m_localID, id, wdc = std::weak_ptr<rtc::DataChannel>(dc)]() {
             PLOG_DEBUG << "DataChannel from " << id << " open";
             if (auto openedDc = wdc.lock()) {
@@ -229,7 +229,7 @@ void NetworkServer::createClientConnection(const PeerID id) {
     }
     {
         clientConn.testDataChannel = pc->createDataChannel(TEST_DATACHANNEL, {});
-        auto& dc = clientConn.testDataChannel;
+        auto &dc = clientConn.testDataChannel;
         dc->onOpen([localID = m_localID, id, wdc = std::weak_ptr<rtc::DataChannel>(dc)]() {
             PLOG_DEBUG << "DataChannel from " << id << " open";
             if (auto openedDc = wdc.lock()) {
@@ -261,13 +261,13 @@ void NetworkServer::run() {
 
 #pragma warning(push)
 #pragma warning(disable : 4996)
-    auto signallingUrlCStr = std::getenv("SIGNALING_URL");
+    auto *signallingUrlCStr = std::getenv("SIGNALING_URL");
 #pragma warning(pop)
     std::string signallingUrl = "localhost:9812";
-    if (signallingUrlCStr) {
+    if (signallingUrlCStr != nullptr) {
         signallingUrl = signallingUrlCStr;
     }
-    PLOG_DEBUG << "SIGNALING_URL env=" << (signallingUrlCStr ? signallingUrl : "(not set, using default)") << ", using URL: " << signallingUrl;
+    PLOG_DEBUG << "SIGNALING_URL env=" << ((signallingUrlCStr != nullptr) ? signallingUrl : "(not set, using default)") << ", using URL: " << signallingUrl;
 
     size_t colonPos = signallingUrl.find(':');
     std::string host = signallingUrl.substr(0, colonPos);

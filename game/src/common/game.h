@@ -7,9 +7,6 @@
 
 #include "box2d/box2d.h"
 
-static constexpr uint32_t FixedTimestepsPerSecond = 60;
-static constexpr float FixedTimestepDuration = 1.0f / static_cast<float>(FixedTimestepsPerSecond);
-
 class GameState {
 public:
     GameState();
@@ -21,7 +18,7 @@ public:
     virtual ~GameState();
 
     uint64_t tickCount{};
-    uint32_t server_subobject_id_counter{1};
+    uint32_t server_subobject_id_counter{ 1 };
 
     uint32_t testData{};
 
@@ -38,9 +35,6 @@ public:
 
 class Game {
 public:
-    static constexpr uint32_t FixedTimestepsPerSecond = 60;
-    static constexpr float FixedTimestepDuration = 1.0f / static_cast<float>(FixedTimestepsPerSecond);
-
     static constexpr float ArenaWidth = 40.0f;
     static constexpr float ArenaHeight = 30.0f;
     static constexpr float ArenaMinX = -ArenaWidth / 2.0f;
@@ -55,6 +49,9 @@ public:
     Game &operator=(Game &&) noexcept = delete;
     virtual ~Game();
 
+    auto getFixedTimestepsPerSecond() const { return m_fixedTimestepsPerSecond; }
+    auto getFixedTimestepDuration() const { return 1.0f / static_cast<float>(m_fixedTimestepsPerSecond); }
+
     void step();
 
     void setState(GameState &);
@@ -64,7 +61,9 @@ private:
     void createArenaWall(b2Vec2 center, b2Vec2 halfSize);
     void createArena();
 
-    bool m_isServer{false};
+    uint32_t m_fixedTimestepsPerSecond = 60;
+
+    bool m_isServer{ false };
     GameState m_state;
     mutable std::shared_mutex m_stateMutex;
 };

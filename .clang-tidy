@@ -1,1 +1,1 @@
-Checks: '-*,bugprone-*,cppcoreguidelines-*,performance-*,readability-*,modernize-*,-modernize-use-nullptr'
+Checks: '-*,bugprone-*,cppcoreguidelines-*,performance-*,readability-*,modernize-*,-modernize-use-nullptr,-cppcoreguidelines-pro-type-reinterpret-cast,-modernize-use-trailing-return-type,-readability-identifier-length,-readability-uppercase-literal-suffix'

@@ -15,7 +15,7 @@ private:
     Game m_game;
     NetworkServer m_networkServer;
 
-    std::atomic<bool> m_killFlag{false};
+    std::atomic<bool> m_killFlag{ false };
 
     void step();
 };

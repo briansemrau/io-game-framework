@@ -52,29 +52,29 @@ void ServerInstance::run() {
         }
         const auto meanStepDuration =
             std::accumulate(stepDurationRecord.begin(), stepDurationRecord.end(), Seconds::zero()).count() / static_cast<float>(stepDurationRecord.size());
-        const auto targetTimescale = 0.9f * meanStepDuration / FixedTimestepDuration;  // go slower than the mean to catch up
+        const auto targetTimescale = 0.9f * meanStepDuration / m_game.getFixedTimestepDuration();  // go slower than the mean to catch up
 
         // Slow down timestep if we're behind
-        if (remainingTime.count() > FixedTimestepDuration) {
+        if (remainingTime.count() > m_game.getFixedTimestepDuration()) {
             // Lerp timescale from 1.0 to target depending on how far behind we are.
             // Using a rolling window average should keep timescale smooth
-            static constexpr auto ramp_time = FixedTimestepDuration * 3;
-            float alpha = std::clamp((remainingTime.count() - FixedTimestepDuration) / ramp_time, 0.0f, 1.0f);
+            const auto rampTime = m_game.getFixedTimestepDuration() * 3;
+            float alpha = std::clamp((remainingTime.count() - m_game.getFixedTimestepDuration()) / rampTime, 0.0f, 1.0f);
             timescale = targetTimescale * alpha + 1.0f * (1.0f - alpha);
         } else {
             timescale = 1.0f;
         }
 
-        const auto current_timestep = Seconds(FixedTimestepDuration) * timescale;
+        const auto currentTimestep = Seconds(m_game.getFixedTimestepDuration()) * timescale;
 
         // Do work
-        if (remainingTime >= current_timestep) {
+        if (remainingTime >= currentTimestep) {
             step();
-            remainingTime -= current_timestep;
+            remainingTime -= currentTimestep;
         }
 
         // And sleep
-        const auto sleepTime = std::min(current_timestep - remainingTime, Seconds(1.0f));
+        const auto sleepTime = std::min(currentTimestep - remainingTime, Seconds(1.0f));
         if (sleepTime.count() > 0.0f) {
             std::this_thread::sleep_for(sleepTime);
         }

@@ -11,16 +11,16 @@
 
 GameState::GameState() {
     b2WorldDef worldDef = b2DefaultWorldDef();
-    worldDef.gravity = {0.0f, 0.0f};
+    worldDef.gravity = { .x = 0.0f, .y = 0.0f };
     worldId = b2CreateWorld(&worldDef);
 }
 
-GameState::GameState(const GameState &other) : tickCount{other.tickCount}, server_subobject_id_counter{other.server_subobject_id_counter}, testData{other.testData} {
+GameState::GameState(const GameState &other) : tickCount{ other.tickCount }, server_subobject_id_counter{ other.server_subobject_id_counter }, testData{ other.testData } {
     // TODO: Properly clone world state if needed for rollback
     // worldId = ...;
 }
 
-GameState::GameState(GameState &&other) noexcept : worldId{std::exchange(other.worldId, {})} {}
+GameState::GameState(GameState &&other) noexcept : worldId{ std::exchange(other.worldId, {}) } {}
 
 GameState &GameState::operator=(const GameState &other) {
     if (this != &other) {
@@ -47,8 +47,7 @@ GameState::~GameState() {
 void Game::step() {
     std::unique_lock lock(m_stateMutex);
 
-    const float deltaTime = FixedTimestepDuration;
-    b2World_Step(m_state.worldId, deltaTime, 4);
+    b2World_Step(m_state.worldId, getFixedTimestepDuration(), 4);
 }
 
 void Game::setState(GameState &p_state) {
@@ -84,13 +83,13 @@ void Game::createArenaWall(b2Vec2 center, b2Vec2 halfSize) {
 
 void Game::createArena() {
     const float wallThickness = 1.0f;
-    const b2Vec2 min{ArenaMinX, ArenaMinY};
-    const b2Vec2 max{ArenaMaxX, ArenaMaxY};
+    const b2Vec2 min{ ArenaMinX, ArenaMinY };
+    const b2Vec2 max{ ArenaMaxX, ArenaMaxY };
 
-    createArenaWall({0.0f, max.y + wallThickness}, {max.x + wallThickness, wallThickness});
-    createArenaWall({0.0f, min.y - wallThickness}, {max.x + wallThickness, wallThickness});
-    createArenaWall({max.x + wallThickness, 0.0f}, {wallThickness, max.y + wallThickness});
-    createArenaWall({min.x - wallThickness, 0.0f}, {wallThickness, max.y + wallThickness});
+    createArenaWall({ 0.0f, max.y + wallThickness }, { max.x + wallThickness, wallThickness });
+    createArenaWall({ 0.0f, min.y - wallThickness }, { max.x + wallThickness, wallThickness });
+    createArenaWall({ max.x + wallThickness, 0.0f }, { wallThickness, max.y + wallThickness });
+    createArenaWall({ min.x - wallThickness, 0.0f }, { wallThickness, max.y + wallThickness });
 }
 
 Game::Game(bool p_isServer) : m_isServer(p_isServer) {

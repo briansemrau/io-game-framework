@@ -1,14 +1,7 @@
 #include "client_instance.h"
 
-#include <algorithm>
 #include <cassert>
 #include <chrono>
-#include <cmath>
-#include <format>
-#include <iostream>
-#include <numbers>
-#include <type_traits>
-#include <vector>
 
 namespace raylib {
 #include "raylib.h"
@@ -63,7 +56,7 @@ void ClientInstance::run() {
         handleInput();
 
         // Do work
-        const auto current_timestep = Seconds(FixedTimestepDuration) * timescale;
+        const auto current_timestep = Seconds(m_game.getFixedTimestepDuration()) * timescale;
         if (remainingTime >= current_timestep) {
             step();
             remainingTime -= current_timestep;
