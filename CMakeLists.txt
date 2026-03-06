@@ -13,6 +13,9 @@ option(BUILD_CLIENT "Build client executable" ON)
 option(BUILD_SERVER "Build server executable" ON)
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
+# Force static linking for self-contained executables
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build shared libraries" FORCE)
+
 # Compiler warnings
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)

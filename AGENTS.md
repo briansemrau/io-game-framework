@@ -37,24 +37,26 @@ signalling-server/  - Go-based WebRTC signalling server
 
 - **CMake 3.25+** with **Ninja Multi-Config** generator
 - **C++23** standard (strict, no extensions)
-- Uses `CMakePresets.json` for platform-specific configurations
 
 ### Platforms
 
-| Platform | Client | Server | Preset |
-|----------|--------|--------|--------|
-| **Windows (MSVC)** | ✅ | ✅ | `windows-client-debug`, `windows-server-debug` |
-| **Linux (Clang)** | ✅ | ✅ | `linux-client-debug`, `linux-server-debug` |
-| **WASM (Emscripten)** | ✅ | ❌ | `wasm-client-debug` |
+| Platform | Client | Server |
+|----------|--------|--------|
+| **Windows (MSVC)** | ✅ | ✅ |
+| **Linux (Clang)** | ✅ | ✅ |
+| **WASM (Emscripten)** | ✅ | ❌ |
 
 ### Build Commands
 
-```bash
-# Configure
-cmake --preset <preset-name>
+Use the build scripts:
 
-# Build
-cmake --build --preset <preset-name>
+```bash
+# Linux
+./scripts/build/build-linux-client.sh [debug|release]
+./scripts/build/build-linux-server.sh [debug|release]
+
+# WASM
+./scripts/build/build-wasm-client.sh [debug|release]
 ```
 
 ### Scripts

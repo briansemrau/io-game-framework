@@ -24,7 +24,6 @@ RUN wget -q https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/c
     && rm cmake-$CMAKE_VERSION-linux-x86_64.tar.gz
 
 # Copy source code
-COPY CMakePresets.json CMakePresets.json
 COPY CMakeLists.txt CMakeLists.txt
 COPY game/ game/
 
