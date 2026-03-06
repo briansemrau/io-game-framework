@@ -8,7 +8,7 @@ The signalling server is a Go-based WebSocket relay that facilitates WebRTC conn
 - Game servers are publicly discoverable via HTTP `/servers` endpoint
 - Clients are hidden (never listed)
 - Client-to-client connections are blocked
-- Only client-to-server and server-to-client connections are allowed
+- Servers act as the offeror, but are triggered by `join` signals from the client
 - WebRTC data channels provide low-latency transport after signalling
 
 ## Architecture Diagram
@@ -16,11 +16,11 @@ The signalling server is a Go-based WebSocket relay that facilitates WebRTC conn
 ```mermaid
 graph TD
     subgraph Server
-        GS[Game Server]
+        GS[Game Server<br/>PeerID: random]
     end
 
     subgraph Client
-        C[Game Client]
+        C[Game Client<br/>PeerID: random]
     end
 
     subgraph Signalling
@@ -28,17 +28,19 @@ graph TD
         SR[(Server Registry)]
     end
 
-    GS -->|WebSocket| S
-    C -->|WebSocket| S
+    GS -->|WebSocket /connect/...| S
+    C -->|WebSocket /connect/...| S
+    C -->|HTTP GET /servers| S
     S --> SR
-    GS -.->|WebRTC Data Channel Negotiation| C
+    GS -.->|WebRTC: Server offers| C
+    C -.->|WebRTC: Client answers| GS
 ```
 
 ## Registration Protocol
 
 ### Message Format
 
-All messages are JSON-encoded:
+All messages are JSON-encoded. The `id` field is used for both sender identification (in outgoing messages from signalling server) and target identification (in incoming messages to signalling server).
 
 **Registration (first message after WebSocket connect):**
 ```json
@@ -47,26 +49,36 @@ All messages are JSON-encoded:
   "id": "unique-peer-id",
   "role": "client" | "server",
   "name": "server-name",         // optional, server only
-  "max_players": 8,              // optional, server only
-  "game_mode": "deathmatch"      // optional, server only
+  "max_players": 32,             // optional, server only
+  "game_mode": "default"         // optional, server only
 }
 ```
 
-**Offer (initiate connection):**
+**Join (client requests to join a server):**
 ```json
 {
-  "type": "offer",
-  "target_id": "peer-id-to-connect-to",
-  "sdp": "session-description-protocol-string"
+  "type": "join",
+  "id": "server-peer-id",
+  "role": "client"
 }
 ```
 
-**Answer (respond to offer):**
+**Offer/Answer (SDP exchange):**
 ```json
 {
-  "type": "answer",
-  "target_id": "original-offer-sender",
-  "sdp": "session-description-protocol-string"
+  "type": "offer" | "answer",
+  "id": "target-peer-id",
+  "description": "sdp-string"
+}
+```
+
+**Candidate (ICE candidate):**
+```json
+{
+  "type": "candidate",
+  "id": "target-peer-id",
+  "candidate": "ice-candidate-string",
+  "mid": "media-stream-id"
 }
 ```
 
@@ -79,30 +91,36 @@ sequenceDiagram
     participant G as Game Server
 
     Note over C,G: Phase 1: Server Registration
-    G->>S: WebSocket connect
-    G->>S: register { role: "server", name: "MyServer", max_players: 8 }
-    S-->>G: register_ok
+    G->>S: WebSocket connect to /connect/<server-id>
+    G->>S: register { id: "<server-id>", role: "server", name: "MyServer" }
     Note right of S: Server added to /servers list
 
-    Note over C,G: Phase 2: Client Registration & Discovery
-    opt no matchmaker
-    C->>S: HTTP GET /servers
-    S-->>C: ["server-123", "server-456"]
-    end
-    C->>S: WebSocket connect
-    C->>S: register { role: "client", id: "client-abc" }
-    S-->>C: register_ok
+    Note over C,G: Phase 2: Client Registration
+    C->>S: WebSocket connect to /connect/<client-id>
+    C->>S: register { id: "<client-id>", role: "client" }
 
-    Note over C,G: Phase 3: WebRTC Connection (Client initiates)
-    C->>S: offer { target_id: "server-123", sdp: "..." }
-    Note over S: Validates: client→server allowed
-    S->>G: offer { sender_id: "client-abc", sdp: "..." }
-    G->>S: answer { target_id: "client-abc", sdp: "..." }
-    S->>C: answer { sender_id: "server-123", sdp: "..." }
-    
-    Note over C,G: Phase 4: Direct Data Channel
-    G->>C: Negotiate WebRTC Data Channel(s)
-    G<<-->>C: Data
+    Note over C,G: Phase 3: Client Joins Server
+    C->>S: join { id: "<server-id>", role: "client" }
+    S->>G: join { id: "<client-id>" }
+    Note over G: Server creates PeerConnection for client
+
+    Note over C,G: Phase 4: WebRTC Negotiation
+    G->>S: offer { id: "<client-id>", description: "<sdp>" }
+    S->>C: offer { id: "<server-id>", description: "<sdp>" }
+    Note over C: Client creates PeerConnection on offer
+    C->>S: answer { id: "<server-id>", description: "<sdp>" }
+    S->>G: answer { id: "<client-id>", description: "<sdp>" }
+
+    Note over C,G: Phase 5: ICE Candidate Exchange
+    loop For each local ICE candidate
+        G->>S: candidate { id: "<client-id>", candidate: "...", mid: "..." }
+        S->>C: candidate { id: "<server-id>", candidate: "...", mid: "..." }
+        C->>S: candidate { id: "<server-id>", candidate: "...", mid: "..." }
+        S->>G: candidate { id: "<client-id>", candidate: "...", mid: "..." }
+    end
+
+    Note over C,G: Phase 6: Transport
+    G<<-->>C: Binary data over WebRTC DataChannels
 ```
 
 ### Access Control Rules
@@ -111,15 +129,16 @@ sequenceDiagram
 graph LR
     subgraph Allowed Connections
         direction LR
-        A[Client] -->|offer| B[Server]
-        B -->|answer| A
-    end
-
-    subgraph Blocked Connections
-        direction LR
-        C[Client] --x |blocked| D[Client]
+        A[Server] <-->|allowed| B[Client]
+        C[Client] x--x |blocked| B
     end
 ```
+
+**Validation logic (in `handleConnection`):**
+- Client-to-client offers are rejected
+- Client-to-server offers are allowed
+- Server-to-client offers are allowed (though servers don't initiate in current implementation)
+- All peers must be registered before sending (except `register` itself)
 
 ## Signalling Server Components
 
@@ -134,16 +153,32 @@ type PeerInfo struct {
 }
 
 type PeerManager struct {
-    peers  map[string]*PeerInfo  // id → peer info
-    servers []string             // list of server IDs
+    peers   map[string]*PeerInfo  // id → peer info
+    servers []string              // list of server IDs
+    maxConns int                  // connection limit (0 = unlimited)
 }
 ```
+
+**Key methods:**
+- `Register(id, conn, role)` - Registers a peer, returns error if ID exists or max connections reached
+- `Unregister(id)` - Removes peer and closes connection
+- `Get(id)` - Retrieves peer info by ID
+- `GetRole(id)` - Returns peer's role (client/server)
+- `GetServerList()` - Returns copy of all server IDs (for `/servers` endpoint)
+
+### Message Routing
+
+The signalling server rewrites the `id` field when forwarding messages:
+- **Incoming**: `id` = target peer ID
+- **Outgoing**: `id` = sender peer ID
+
+This allows receivers to know who sent the message without an explicit `sender_id` field.
 
 ### HTTP Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/health` | GET | Health check |
-| `/stats` | GET | Connections count |
-| `/servers` | GET | Returns JSON array of server IDs |
-| `/connect` | GET, WS | WebSocket signalling endpoint |
+| `/stats` | GET | Connections count (JSON: `{"connections": N}`) |
+| `/servers` | GET | Returns JSON array of registered server IDs |
+| `/connect/{peer-id}` | GET, WS | WebSocket signalling endpoint (peer-id in URL path) |

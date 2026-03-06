@@ -1,6 +1,8 @@
-# Project Architecture Design
+# Netcode Architecture
 
-## Rollback Resim
+
+
+## Rollback/Resim
 
 <!-- <details>
 <summary>Sequence Diagram</summary> -->
@@ -80,6 +82,176 @@ sequenceDiagram
 
 <!-- </details> -->
 
+## State Updates
+
+### Definition
+
+```cpp
+using EntityID = uint64_t;
+using EntityType = uint8_t;
+
+struct EncodedEntityState {
+    EntityID id;
+    EntityType type;
+    vector<byte> data;
+};
+
+struct EncodedStateMessage {
+    uint64_t tick;
+    vector<EncodedEntityState> entityStates;
+};
+```
+
+### Encoding
+```cpp
+// Server tracks filtered state
+map<ClientID, set<EntityID>> clientTrackedEntities;
+// ...
+for (entity : Entities) {
+    // State filtering
+    if (shouldInclude(entity, clientID)) {
+        encode(&buffer, entityID); // cached
+    }
+}
+// ...
+
+// Client ack
+clientTrackedEntities[clientID].insert_range(clientAck.ackedEntities)
+// ...
+
+void encode(EntityID entityID) {
+    if (encodedCache.contains(entityID)) {
+        return encodedCache[entityID];
+    }
+
+    EncodedEntityState state = ...; // serialize
+
+    encodedCache[entityID] = state;
+    return state;
+}
+```
+
+
+## Events
+
+Types of events:
+- User input
+- Server events (such as player joins)
+
+
+<table style="width:100%">
+<tr>
+<th>Client Loop</th>
+<th>Server Loop</th>
+</tr>
+<tr>
+<td>
+
+```mermaid
+sequenceDiagram
+participant Input@{ "type": "boundary" }
+participant c as Simulation
+participant e as Event Manager
+%% participant et as Client Network Thread
+%% participant s as Server
+
+activate c
+%% loop
+Input->>c: <input>
+note over c: begin timestep
+
+loop
+activate c
+c-->>c: process input
+c->>e: record event @ tick
+activate e
+deactivate e
+deactivate c
+end
+
+c->>c: execute event queue
+c->>c: simulation tick
+
+note over c: end timestep
+c->>c: sleep
+%% end
+deactivate c
+```
+
+</td>
+<td>
+
+```mermaid
+sequenceDiagram
+participant sn as Server Net
+participant s as Server Sim
+
+alt
+sn->>+s: <client event>
+else
+sn->>s: <join event>
+end
+s->>-s: insert into queue[event.tick]
+%% loop
+activate s
+note over s: begin timestep
+s->>s: execute queue[currentTick]
+s->>s: simulation tick
+note over s: end timestep
+s->>s: sleep
+%% end
+deactivate s
+```
+
+</td>
+</tr>
+</table>
+
+
+### Event synchronization
+```mermaid
+sequenceDiagram
+participant cs as Client Sim
+participant e as Event Manager
+participant cn as Client Network Thread
+participant sn as Server Network Thread
+participant ss as Server Sim
+
+cs->>+e: record event @ tick
+e->>cn: add event
+deactivate e
+
+loop >>10Hz
+    cn--)+sn: send unacked events
+    sn->>ss: insert events into queue
+    note right of sn: late events (timestamped before current tick)<br>may be executed late & immediately
+    sn--)-cn: ack received events
+end
+
+sn->>cn: state update
+
+ss->>ss:
+```
+
+```cpp
+struct EventAck {
+    uint32_t id; // unchanging for continuous data, server discards old? discrete events unique id?
+    uint64_t tick; // accepted timestamp
+    // WIP
+}
+
+struct EventsAckMessage {
+    vector<EventAck> eventAcks;
+    vector<map<Tick, Event>> futureEvents; // other players may be ahead?
+};
+```
+
+### Event resimulation
+
+```mermaid
+sequenceDiagram
+participant Client Resimulation
+```
 
 ## Network IDs
 
