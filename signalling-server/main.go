@@ -259,11 +259,9 @@ func handleConnection(pm *PeerManager, id string, conn *websocket.Conn, register
 			continue
 		}
 
-		if msg.Type == MsgTypeOffer {
-			senderRole := pm.GetRole(id)
-			if senderRole == RoleClient && targetPeer.role == RoleClient {
-				continue
-			}
+		senderRole := pm.GetRole(id)
+		if senderRole == RoleClient && targetPeer.role == RoleClient {
+			continue
 		}
 
 		msg.ID = id

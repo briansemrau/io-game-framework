@@ -10,7 +10,7 @@ namespace raylib {
 #include "raylib.h"
 }
 
-void Renderer::render(const GameState& gameState, const RenderState& renderState) {
+void Renderer::render(const GameState& gameState) {
     float zoom = 1;
 
     raylib::BeginDrawing();
@@ -18,24 +18,6 @@ void Renderer::render(const GameState& gameState, const RenderState& renderState
         raylib::ClearBackground({40, 45, 50, 255});
 
         raylib::Vector2 screenCenter = {(float)raylib::GetScreenWidth() / 2.0f, (float)raylib::GetScreenHeight() / 2.0f};
-
-        float arenaW = Game::ArenaWidth * zoom;
-        float arenaH = Game::ArenaHeight * zoom;
-
-        raylib::Rectangle arenaRect = {screenCenter.x - arenaW / 2.0f, screenCenter.y - arenaH / 2.0f, arenaW, arenaH};
-        raylib::DrawRectangleLinesEx(arenaRect, 4.0f, {80, 90, 100, 255});
-
-        float gridSize = 5.0f;
-        for (float x = Game::ArenaMinX; x <= Game::ArenaMaxX; x += gridSize) {
-            raylib::Vector2 start = {screenCenter.x + x * zoom, screenCenter.y + Game::ArenaMinY * zoom};
-            raylib::Vector2 end = {screenCenter.x + x * zoom, screenCenter.y + Game::ArenaMaxY * zoom};
-            raylib::DrawLineV(start, end, {50, 55, 60, 100});
-        }
-        for (float y = Game::ArenaMinY; y <= Game::ArenaMaxY; y += gridSize) {
-            raylib::Vector2 start = {screenCenter.x + Game::ArenaMinX * zoom, screenCenter.y + y * zoom};
-            raylib::Vector2 end = {screenCenter.x + Game::ArenaMaxX * zoom, screenCenter.y + y * zoom};
-            raylib::DrawLineV(start, end, {50, 55, 60, 100});
-        }
 
         const char* controls = "WASD/Arrows: Drive | Space: Handbrake | R: Reset | G: Debug | Scroll: Zoom";
         raylib::DrawText(controls, 10, raylib::GetScreenHeight() - 30, 20, raylib::LIGHTGRAY);
@@ -56,7 +38,7 @@ void Renderer::render(const GameState& gameState, const RenderState& renderState
         // b2Vec2 playerPos = playerCar.getPosition();
         // DrawCircleV({miniMapPos.x + miniMapSize / 2 + playerPos.x * miniMapScale, miniMapPos.y + miniMapSize / 2 + playerPos.y * miniMapScale}, 4.0f, {255, 50, 50, 255});
 
-        if (renderState.debugDrawEnabled) {
+        if (m_renderState.debugDrawEnabled) {
             // Debug draw requires passing b2DebugDraw from client_main.cpp
             // TODO: Implement proper debug draw by passing debugDraw to renderer
         }

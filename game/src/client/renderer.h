@@ -13,7 +13,9 @@ struct RenderState {
 
 class Renderer {
 public:
-    void render(const GameState& gameState, const RenderState& renderState);
+    void render(const GameState& gameState);
+
+    RenderState m_renderState;
 
 private:
     // void renderCar(const Car& car, Vector2 screenPos, float zoom, Color color);

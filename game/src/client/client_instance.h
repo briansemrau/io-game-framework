@@ -15,10 +15,10 @@ private:
     Game m_game;
     NetworkClient m_networkClient;
     Renderer m_renderer;
-    RenderState m_renderState;
 
     // TODO: support running P2P server?
     // NetworkServer *m_networkServer;
+    // we would need to disable networkclient
 
     void handleInput();
     void step();

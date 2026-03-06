@@ -5,8 +5,6 @@
 #include <shared_mutex>
 #include <vector>
 
-#include "box2d/box2d.h"
-
 class GameState {
 public:
     GameState();
@@ -22,8 +20,6 @@ public:
 
     uint32_t testData{};
 
-    b2WorldId worldId{};
-
     // constexpr static auto serialize(auto &archive, auto &self) {
     //     return archive(
     //         self.tickCount,
@@ -35,13 +31,6 @@ public:
 
 class Game {
 public:
-    static constexpr float ArenaWidth = 40.0f;
-    static constexpr float ArenaHeight = 30.0f;
-    static constexpr float ArenaMinX = -ArenaWidth / 2.0f;
-    static constexpr float ArenaMinY = -ArenaHeight / 2.0f;
-    static constexpr float ArenaMaxX = ArenaWidth / 2.0f;
-    static constexpr float ArenaMaxY = ArenaHeight / 2.0f;
-
     Game(bool p_isServer = false);
     Game(const Game &) = delete;
     Game(Game &&) noexcept = delete;
@@ -49,20 +38,12 @@ public:
     Game &operator=(Game &&) noexcept = delete;
     virtual ~Game();
 
-    auto getFixedTimestepsPerSecond() const { return m_fixedTimestepsPerSecond; }
-    auto getFixedTimestepDuration() const { return 1.0f / static_cast<float>(m_fixedTimestepsPerSecond); }
-
     void step();
 
     void setState(GameState &);
     const GameState &getState() const;
 
 private:
-    void createArenaWall(b2Vec2 center, b2Vec2 halfSize);
-    void createArena();
-
-    uint32_t m_fixedTimestepsPerSecond = 60;
-
     bool m_isServer{ false };
     GameState m_state;
     mutable std::shared_mutex m_stateMutex;

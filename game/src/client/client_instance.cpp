@@ -87,11 +87,11 @@ void ClientInstance::handleInput() {
     if (raylib::IsKeyDown(raylib::KEY_D) || raylib::IsKeyDown(raylib::KEY_RIGHT)) turnInput += 1.0f;
     if (raylib::IsKeyDown(raylib::KEY_SPACE)) handbrakeInput = true;
 
-    if (raylib::IsKeyPressed(raylib::KEY_G)) m_renderState.debugDrawEnabled = !m_renderState.debugDrawEnabled;
+    if (raylib::IsKeyPressed(raylib::KEY_G)) m_renderer.m_renderState.debugDrawEnabled = !m_renderer.m_renderState.debugDrawEnabled;
 
     // m_gameState.getPlayerCar().setInput(throttleInput, turnInput, handbrakeInput);
 }
 
 void ClientInstance::step() { m_game.step(); }
 
-void ClientInstance::render() { m_renderer.render(m_game.getState(), m_renderState); }
+void ClientInstance::render() { m_renderer.render(m_game.getState()); }
