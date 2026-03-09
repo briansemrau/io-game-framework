@@ -1,11 +1,15 @@
 #ifndef NETWORK_COMMON_H
 #define NETWORK_COMMON_H
 
-#include <cstdint>
+#include <cstddef>
 #include <memory>
 #include <rtc/rtc.hpp>
 #include <string>
 #include <vector>
+
+#include "types.h"
+
+std::vector<std::string> getDefaultIceServerUrls();
 
 static constexpr auto TEST_DATACHANNEL = "test";
 static constexpr auto STATE_DATACHANNEL = "state";
@@ -16,12 +20,17 @@ struct NetworkConnection {
     std::shared_ptr<rtc::DataChannel> stateDataChannel;
 };
 
-extern std::string generateRandomIDStr(size_t length);
-
-using PeerID = uint64_t;
-
 extern PeerID generateRandomPeerID();
 
-std::vector<std::string> getDefaultIceServerUrls();
+// struct EncodedEntityState {
+//     EntityID id;
+//     EntityType type;
+//     std::vector<std::byte> data;
+// };
+
+// struct EncodedStateMessage {
+//     uint64_t tick;
+//     std::vector<EncodedEntityState> entityStates;
+// };
 
 #endif  // NETWORK_COMMON_H

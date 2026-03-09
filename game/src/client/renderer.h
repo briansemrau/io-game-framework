@@ -1,26 +1,47 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "game.h"
+namespace raylib {
+#include "raylib.h"
+}
 
-// Data specific to the current window
-// (we do not handle multiple cameras)
+#include "game.h"
+#include "tank_components.h"
+
 struct RenderState {
     bool debugDrawEnabled = false;
-    // TODO camera
-    // 
+    raylib::Camera2D camera;
 };
 
-class Renderer {
+class GameRenderer {
 public:
-    void render(const GameState& gameState);
+    GameRenderer(const Game &game);
+    ~GameRenderer() = default;
 
-    RenderState m_renderState;
+    void init(int width, int height);
+    void shutdown();
+    void beginFrame();
+    void endFrame();
+    void updateCamera(float targetX, float targetY);
+
+    void render();
+
+    RenderState &getRenderState() { return m_renderState; }
+    const RenderState &getRenderState() const { return m_renderState; }
 
 private:
-    // void renderCar(const Car& car, Vector2 screenPos, float zoom, Color color);
+    void renderGameContent();
+    void renderUI();
 
-    // TODO register renderer for a given entity
+    void renderTank(entt::entity entity, const Transform &transform, const Tank &tank);
+    void renderBullet(const Transform &transform, const Bullet &bullet);
+    void renderCollectible(const Transform &transform, const Collectible &collectible);
+    void renderDestructible(const Transform &transform, const Destructible &destructible);
+
+    const Game &m_game;
+    RenderState m_renderState;
+    int m_windowWidth;
+    int m_windowHeight;
 };
 
-#endif // RENDERER_H
+#endif  // RENDERER_H

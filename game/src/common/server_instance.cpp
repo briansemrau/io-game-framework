@@ -1,17 +1,17 @@
 #include "server_instance.h"
 
+#define PLOG_OMIT_LOG_DEFINES
 #include <plog/Log.h>
 
 #include <algorithm>
 #include <chrono>
 #include <deque>
-#include <iostream>
 #include <numeric>
 #include <thread>
 
 using Seconds = std::chrono::duration<float, std::ratio<1>>;
 
-ServerInstance::ServerInstance() : m_networkServer(m_game) { PLOG_DEBUG << "Constructor called"; }
+ServerInstance::ServerInstance() : m_game(true), m_networkServer(m_game) {}
 
 void ServerInstance::run() {
     PLOG_DEBUG << "Starting server instance";

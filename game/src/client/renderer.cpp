@@ -1,56 +1,115 @@
-#include "renderer.h"
-
+// clang-format off
 #include <cmath>
-#include <format>
 #include <numbers>
+// clang-format on
 
-#include "game.h"
+#include "renderer.h"
 
 namespace raylib {
 #include "raylib.h"
 }
 
-void Renderer::render(const GameState& gameState) {
-    float zoom = 1;
+GameRenderer::GameRenderer(const Game &game) : m_game(game) {}
 
+void GameRenderer::init(int width, int height) {
+    m_windowWidth = width;
+    m_windowHeight = height;
+    m_renderState.camera.target = { 0.0f, 0.0f };
+    m_renderState.camera.offset = { static_cast<float>(width) / 2.0f, static_cast<float>(height) / 2.0f };
+    m_renderState.camera.rotation = 0.0f;
+    m_renderState.camera.zoom = 10.0f;
+}
+
+void GameRenderer::shutdown() {}
+
+void GameRenderer::beginFrame() {
     raylib::BeginDrawing();
-    {
-        raylib::ClearBackground({40, 45, 50, 255});
+    raylib::ClearBackground({ 40, 45, 50, 255 });
+    raylib::BeginMode2D(m_renderState.camera);
+}
 
-        raylib::Vector2 screenCenter = {(float)raylib::GetScreenWidth() / 2.0f, (float)raylib::GetScreenHeight() / 2.0f};
-
-        const char* controls = "WASD/Arrows: Drive | Space: Handbrake | R: Reset | G: Debug | Scroll: Zoom";
-        raylib::DrawText(controls, 10, raylib::GetScreenHeight() - 30, 20, raylib::LIGHTGRAY);
-
-        raylib::DrawFPS(raylib::GetScreenWidth() - 100, 10);
-        raylib::DrawText(std::format(" {:.2f}", raylib::GetFrameTime()).c_str(), raylib::GetScreenWidth() - 100, 30, 20, raylib::GRAY);
-
-        // DrawText(std::format("x: {:.1f} y: {:.1f}", carPos.x, carPos.y).c_str(), GetScreenWidth() - 200, 50, 20, GRAY);
-        // DrawText(std::format("Zoom: {:.0f}", zoom).c_str(), GetScreenWidth() - 200, 70, 20, GRAY);
-        // DrawText(std::format("Speed: {:.1f}", speed).c_str(), 10, 10, 20, LIGHTGRAY);
-
-        // float miniMapSize = 100.0f;
-        // float miniMapScale = 2.0f;
-        // Vector2 miniMapPos = {GetScreenWidth() - miniMapSize - 20, GetScreenHeight() - miniMapSize - 20};
-        // DrawRectangle((int)miniMapPos.x, (int)miniMapPos.y, (int)miniMapSize, (int)miniMapSize, {20, 25, 30, 150});
-        // DrawRectangleLines((int)miniMapPos.x, (int)miniMapPos.y, (int)miniMapSize, (int)miniMapSize, {80, 90, 100, 255});
-
-        // b2Vec2 playerPos = playerCar.getPosition();
-        // DrawCircleV({miniMapPos.x + miniMapSize / 2 + playerPos.x * miniMapScale, miniMapPos.y + miniMapSize / 2 + playerPos.y * miniMapScale}, 4.0f, {255, 50, 50, 255});
-
-        if (m_renderState.debugDrawEnabled) {
-            // Debug draw requires passing b2DebugDraw from client_main.cpp
-            // TODO: Implement proper debug draw by passing debugDraw to renderer
-        }
-    }
+void GameRenderer::endFrame() {
+    raylib::EndMode2D();
+    renderUI();
     raylib::EndDrawing();
 }
 
-// void Renderer::renderCar(const Car& car, Vector2 screenPos, float zoom, Color color) {
-//     float carAngle = car.getAngle();
+void GameRenderer::updateCamera(float targetX, float targetY) { m_renderState.camera.target = { targetX, targetY }; }
 
-//     float carScreenW = car.width * zoom;
-//     float carScreenH = car.height * zoom;
+void GameRenderer::render() {
+    beginFrame();
 
-//     DrawRectanglePro({screenPos.x, screenPos.y, carScreenW, carScreenH}, {carScreenW / 2.0f, carScreenH / 2.0f}, carAngle * (180.0f / std::numbers::pi), color);
-// }
+    bool foundPlayer = false;
+    m_game.getState().registry.view<Transform, Tank>().each([this, &foundPlayer](const Transform &transform, const Tank &tank) {
+        if (tank.isPlayer) {
+            m_renderState.camera.target = { static_cast<float>(transform.position.x), static_cast<float>(transform.position.y) };
+            foundPlayer = true;
+        }
+    });
+
+    renderGameContent();
+
+    endFrame();
+}
+
+void GameRenderer::renderGameContent() {
+    m_game.getState().registry.view<entt::entity, Transform, Tank>().each(
+        [this](entt::entity entity, const Transform &transform, const Tank &tank) { renderTank(entity, transform, tank); });
+
+    m_game.getState().registry.view<Transform, Bullet>().each([this](const Transform &transform, const Bullet &bullet) { renderBullet(transform, bullet); });
+
+    m_game.getState().registry.view<Transform, Collectible>().each(
+        [this](const Transform &transform, const Collectible &collectible) { renderCollectible(transform, collectible); });
+
+    m_game.getState().registry.view<Transform, Destructible>().each(
+        [this](const Transform &transform, const Destructible &destructible) { renderDestructible(transform, destructible); });
+}
+
+void GameRenderer::renderUI() {
+    const char *controls = "WASD: Move | Space: Shoot | C: Spawn Collectible | X: Spawn Destructible | G: Debug";
+    raylib::DrawText(controls, 10, raylib::GetScreenHeight() - 30, 20, raylib::LIGHTGRAY);
+
+    raylib::DrawFPS(raylib::GetScreenWidth() - 100, 10);
+}
+
+void GameRenderer::renderTank(entt::entity entity, const Transform &transform, const Tank &tank) {
+    raylib::Vector2 pos{ static_cast<float>(transform.position.x), static_cast<float>(transform.position.y) };
+    float angle = transform.rotation * (180.0f / std::numbers::pi_v<float>);
+
+    raylib::Color color = tank.isPlayer ? raylib::GREEN : raylib::BLUE;
+    raylib::DrawRectanglePro({ pos.x - 1.5f, pos.y - 1.5f, 3.0f, 3.0f }, { pos.x, pos.y }, angle, color);
+
+    raylib::DrawCircleV(pos, 0.8f, raylib::DARKGREEN);
+
+    raylib::Vector2 cannonTip = { pos.x + std::cosf(transform.rotation) * 2.5f, pos.y + std::sinf(transform.rotation) * 2.5f };
+    raylib::DrawLineV(pos, cannonTip, raylib::DARKBROWN);
+}
+
+void GameRenderer::renderBullet(const Transform &transform, const Bullet &bullet) {
+    raylib::Vector2 pos{ static_cast<float>(transform.position.x), static_cast<float>(transform.position.y) };
+    raylib::DrawCircleV(pos, 0.3f, raylib::YELLOW);
+}
+
+void GameRenderer::renderCollectible(const Transform &transform, const Collectible &collectible) {
+    if (!collectible.active) return;
+
+    raylib::Vector2 pos{ static_cast<float>(transform.position.x), static_cast<float>(transform.position.y) };
+    raylib::DrawCircleV(pos, collectible.radius, raylib::GOLD);
+    raylib::DrawCircleLinesV(pos, collectible.radius, raylib::ORANGE);
+}
+
+void GameRenderer::renderDestructible(const Transform &transform, const Destructible &destructible) {
+    if (!destructible.active) return;
+
+    raylib::Vector2 pos{ static_cast<float>(transform.position.x), static_cast<float>(transform.position.y) };
+
+    float healthRatio = destructible.health / destructible.maxHealth;
+    raylib::Color color = raylib::Fade(raylib::Color{ (unsigned char)(200 * healthRatio + 50), (unsigned char)(50 + 150 * (1.0f - healthRatio)), 50, 255 }, 0.8f);
+
+    raylib::DrawCircleV(pos, destructible.radius, color);
+    raylib::DrawCircleLinesV(pos, destructible.radius, raylib::WHITE);
+
+    float barWidth = destructible.radius * 2.0f;
+    float barHeight = 0.4f;
+    raylib::DrawRectangle(pos.x - destructible.radius, pos.y - destructible.radius - 0.6f, barWidth * healthRatio, barHeight, raylib::GREEN);
+}

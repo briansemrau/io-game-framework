@@ -1,52 +1,64 @@
-#ifndef GAME_STATE_H
-#define GAME_STATE_H
+#ifndef GAME_H
+#define GAME_H
 
+#include <entt/entt.hpp>
+#include <cstdint>
 #include <memory>
 #include <shared_mutex>
-#include <vector>
+
+#include "tank_components.h"
+#include "types.h"
 
 class GameState {
 public:
-    GameState();
-
-    GameState(const GameState &);
-    GameState(GameState &&) noexcept;
-    GameState &operator=(const GameState &);
-    GameState &operator=(GameState &&) noexcept;
-    virtual ~GameState();
+    GameState() = default;
+    GameState(const GameState &) = default;
+    GameState(GameState &&) noexcept = default;
+    GameState &operator=(const GameState &) = default;
+    GameState &operator=(GameState &&) noexcept = default;
+    ~GameState() = default;
 
     uint64_t tickCount{};
     uint32_t server_subobject_id_counter{ 1 };
 
-    uint32_t testData{};
-
-    // constexpr static auto serialize(auto &archive, auto &self) {
-    //     return archive(
-    //         self.tickCount,
-    //         self.server_subobject_id_counter,
-    //         self.testData
-    //     );
-    // }
+    entt::registry registry;
 };
 
 class Game {
 public:
-    Game(bool p_isServer = false);
+    explicit Game(bool p_isServer = false);
     Game(const Game &) = delete;
     Game(Game &&) noexcept = delete;
     Game &operator=(const Game &) = delete;
     Game &operator=(Game &&) noexcept = delete;
-    virtual ~Game();
+    ~Game() = default;
 
     void step();
 
-    void setState(GameState &);
+    void queueInput(const InputState &input, PeerID peerId);
+
+    entt::entity spawnTank(b2Vec2 position, float rotation, PeerID peerId);
+    entt::entity spawnBullet(b2Vec2 position, float rotation, PeerID peerId);
+    entt::entity spawnCollectible(b2Vec2 position);
+    entt::entity spawnDestructible(b2Vec2 position);
+    void destroyEntity(entt::entity entity);
+
+    void setupInitialGameState();
+
+    float getFixedTimestepDuration() const;
+
+    bool isServer() const;
+
+    GameState &getState();
     const GameState &getState() const;
 
 private:
     bool m_isServer{ false };
-    GameState m_state;
+
+    std::unique_ptr<GameState> m_state;
     mutable std::shared_mutex m_stateMutex;
+
+    static constexpr float FIXED_TIMESTEP{ 1.0f / 60.0f };
 };
 
-#endif  // GAME_STATE_H
+#endif  // GAME_H

@@ -1,3 +1,4 @@
+#define PLOG_OMIT_LOG_DEFINES
 #include <plog/Log.h>
 #include <plog/Init.h>
 #include <plog/Formatters/TxtFormatter.h>
@@ -10,7 +11,7 @@ int main() {
     plog::init(plog::debug, &consoleAppender);
     PLOG_DEBUG << "Starting client!";
 
-    ClientInstance client;
+    ClientInstance client{true};
 
     client.run();
 

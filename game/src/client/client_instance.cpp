@@ -9,11 +9,16 @@ namespace raylib {
 
 using Seconds = std::chrono::duration<float, std::ratio<1>>;
 
-ClientInstance::ClientInstance() : m_networkClient(m_game) {}
+ClientInstance::ClientInstance(bool p_isLocal)
+    : m_game(p_isLocal)
+    , m_networkClient(m_game)
+    , m_renderer(m_game) {}
 
 void ClientInstance::run() {
     constexpr int screenWidth = 1280;
     constexpr int screenHeight = 720;
+
+    m_renderer.init(screenWidth, screenHeight);
 
     raylib::InitWindow(screenWidth, screenHeight, "Test Game");
     raylib::SetWindowState(raylib::FLAG_WINDOW_RESIZABLE);
@@ -22,8 +27,14 @@ void ClientInstance::run() {
 
     raylib::SetWindowTitle("Test Game");
 
-    constexpr PeerID SERVER_ID = 12345;  // TODO: get from matchmaking server
-    m_networkClient.connect("localhost", 9812, SERVER_ID);
+    if (!m_game.isServer()) {
+        constexpr PeerID SERVER_ID = 12345;  // TODO: get from matchmaking server
+        m_networkClient.connect("localhost", 9812, SERVER_ID);
+    }
+
+    if (m_game.isServer()) {
+        m_game.spawnTank({}, {}, m_localPeerId);
+    }
 
     float timescale = 1.0;  // TODO get from server. maybe encapsulate in game state? or do we want some generic header
                             // data in the network data?
@@ -70,28 +81,34 @@ void ClientInstance::run() {
 }
 
 void ClientInstance::handleInput() {
-    // TODO this is where we queue input events. they will be handled in the next timestep, and also synchronized with
-    // the server. The rollback data will store the most recent server truth (including all other user's input events),
-    // and retain all input events across timesteps since that truth state so that they can be replayed in resim.
-
-    // Input events can be stored as global events, or as state on entities. It depends on the side effects of the
-    // event. Storing as entity state allows us to reduce bandwidth by implicitly passing it through spatial filtering.
-
     float throttleInput = 0.0f;
     float turnInput = 0.0f;
-    bool handbrakeInput = false;
+    bool shootInput = false;
 
     if (raylib::IsKeyDown(raylib::KEY_W) || raylib::IsKeyDown(raylib::KEY_UP)) throttleInput += 1.0f;
     if (raylib::IsKeyDown(raylib::KEY_S) || raylib::IsKeyDown(raylib::KEY_DOWN)) throttleInput -= 1.0f;
     if (raylib::IsKeyDown(raylib::KEY_A) || raylib::IsKeyDown(raylib::KEY_LEFT)) turnInput -= 1.0f;
     if (raylib::IsKeyDown(raylib::KEY_D) || raylib::IsKeyDown(raylib::KEY_RIGHT)) turnInput += 1.0f;
-    if (raylib::IsKeyDown(raylib::KEY_SPACE)) handbrakeInput = true;
+    if (raylib::IsKeyPressed(raylib::KEY_SPACE)) shootInput = true;
 
-    if (raylib::IsKeyPressed(raylib::KEY_G)) m_renderer.m_renderState.debugDrawEnabled = !m_renderer.m_renderState.debugDrawEnabled;
+    if (raylib::IsKeyPressed(raylib::KEY_G)) m_renderer.getRenderState().debugDrawEnabled = !m_renderer.getRenderState().debugDrawEnabled;
 
-    // m_gameState.getPlayerCar().setInput(throttleInput, turnInput, handbrakeInput);
+    // Spawn test entities
+    if (raylib::IsKeyPressed(raylib::KEY_C)) {
+        m_game.spawnCollectible(b2Vec2(10.0f, 10.0f));
+    }
+    if (raylib::IsKeyPressed(raylib::KEY_X)) {
+        m_game.spawnDestructible(b2Vec2(20.0f, 0.0f));
+    }
+
+    InputState input;
+    input.throttle = throttleInput;
+    input.turn = turnInput;
+    input.shoot = shootInput;
+
+    m_game.queueInput(input, m_localPeerId);
 }
 
 void ClientInstance::step() { m_game.step(); }
 
-void ClientInstance::render() { m_renderer.render(m_game.getState()); }
+void ClientInstance::render() { m_renderer.render(); }

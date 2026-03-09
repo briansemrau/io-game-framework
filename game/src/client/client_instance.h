@@ -7,14 +7,16 @@
 
 class ClientInstance {
 public:
-    ClientInstance();
+    explicit ClientInstance(bool p_isLocal);
 
     void run();
 
 private:
     Game m_game;
     NetworkClient m_networkClient;
-    Renderer m_renderer;
+    GameRenderer m_renderer;
+
+    PeerID m_localPeerId{ 1 };
 
     // TODO: support running P2P server?
     // NetworkServer *m_networkServer;

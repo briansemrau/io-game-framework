@@ -1,6 +1,8 @@
 #ifndef SERVER_INSTANCE_H
 #define SERVER_INSTANCE_H
 
+#include <atomic>
+
 #include "game.h"
 #include "network_server.h"
 

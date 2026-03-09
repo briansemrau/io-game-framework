@@ -7,10 +7,18 @@ function(suppress_third_party_warnings)
     
     foreach(target ${ARG_TARGETS})
         if(TARGET ${target})
-            if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-                target_compile_options(${target} PRIVATE -w)
+            # Check if target is an INTERFACE library
+            get_target_property(target_type ${target} TYPE)
+            if("${target_type}" STREQUAL "INTERFACE_LIBRARY")
+                set(scope INTERFACE)
             else()
-                target_compile_options(${target} PRIVATE /W0)
+                set(scope PRIVATE)
+            endif()
+            
+            if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+                target_compile_options(${target} ${scope} -w)
+            else()
+                target_compile_options(${target} ${scope} /W0)
             endif()
         endif()
     endforeach()
@@ -22,7 +30,7 @@ set(JSON_BuildTests OFF CACHE INTERNAL "")
 add_subdirectory(thirdparty/json)
 add_subdirectory(thirdparty/box2d)
 add_subdirectory(thirdparty/entt)
-suppress_third_party_warnings(TARGETS box2d entt)
+suppress_third_party_warnings(TARGETS box2d EnTT)
 
 # Networking - platform-specific
 if(CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
@@ -52,7 +60,7 @@ file(GLOB_RECURSE COMMON_SOURCES CONFIGURE_DEPENDS src/common/*.cpp)
 
 add_library(common STATIC ${COMMON_SOURCES})
 
-target_link_libraries(common PUBLIC plog::plog nlohmann_json::nlohmann_json transport box2d)
+target_link_libraries(common PUBLIC plog::plog nlohmann_json::nlohmann_json transport box2d EnTT::EnTT)
 target_include_directories(common PUBLIC ${CMAKE_SOURCE_DIR}/game/thirdparty/zpp_bits)
 target_include_directories(common PUBLIC ${CMAKE_SOURCE_DIR}/game/src/common)
 
